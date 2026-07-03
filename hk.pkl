@@ -25,6 +25,10 @@ local Common = new Group {
 
 local linters = new Mapping<String, Step> {
     ...Common.steps
+    ["renovate-config-validator"] = {
+        glob = List("default.json", ".renovaterc.json")
+        check = "renovate-config-validator --strict --no-global {{files}}"
+    }
 }
 
 hooks {

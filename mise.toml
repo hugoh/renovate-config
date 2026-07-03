@@ -1,4 +1,6 @@
 [tools]
+node = "lts"
+"npm:renovate" = "latest"
 hk = "latest"
 actionlint = "latest"
 pinact = "latest"
