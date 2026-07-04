@@ -27,10 +27,9 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
   for `dprint.json` plugin version updates (Renovate has no built-in dprint
   manager)
 
-`go-tools/default.json` and `spoon-tools/default.json` intentionally do **not**
-extend this preset — they predate it and encode a deliberately different,
-more conservative policy for their own clusters (Go services, Hammerspoon
-spoons). This repo is for everything else.
+`go-tools/default.json` intentionally does **not** extend this preset — it
+predates it and encodes a deliberately different, more conservative policy
+for its own cluster (Go services). This repo is for everything else.
 
 ## Versioning
 
