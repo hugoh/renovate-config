@@ -1,4 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>hugoh/renovate-config#1"]
+  "extends": ["github>hugoh/renovate-config"]
 }
