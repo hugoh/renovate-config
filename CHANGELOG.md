@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/hugoh/renovate-config/compare/v1.1.0...v1.1.1) (2026-07-04)
+
+
+### Bug Fixes
+
+* **readme:** correct stale spoon-tools claim, exclude generated CHANGELOG from lint ([#3](https://github.com/hugoh/renovate-config/issues/3)) ([9d37ed8](https://github.com/hugoh/renovate-config/commit/9d37ed89b6329689800a8823020dc36c483aa7c7))
+
 ## [1.1.0](https://github.com/hugoh/renovate-config/compare/v1.0.0...v1.1.0) (2026-07-04)
 
 
