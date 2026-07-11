@@ -12,6 +12,21 @@
     "automerge": true,
     "schedule": ["at any time"]
   },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Bump the hugoh/hk-config Pkl package pin embedded in package:// import URLs",
+      "managerFilePatterns": ["/\\.pkl$/"],
+      "matchStrings": [
+        "package://github\\.com/hugoh/hk-config/releases/download/v[^/]+/hk-config@(?<currentValue>[^#]+)#"
+      ],
+      "datasourceTemplate": "github-tags",
+      "packageNameTemplate": "hugoh/hk-config",
+      "extractVersionTemplate": "^v(?<version>.*)$",
+      "versioningTemplate": "semver",
+      "autoReplaceStringTemplate": "package://github.com/hugoh/hk-config/releases/download/v{{{newValue}}}/hk-config@{{{newValue}}}#"
+    }
+  ],
   "packageRules": [
     {
       "matchUpdateTypes": ["major"],
@@ -31,6 +46,12 @@
     {
       "matchManagers": ["github-actions"],
       "matchPackageNames": ["hugoh/gh-workflows"],
+      "schedule": ["at any time"]
+    },
+    {
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["hugoh/hk-config"],
+      "minimumReleaseAge": null,
       "schedule": ["at any time"]
     }
   ]
