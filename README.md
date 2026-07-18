@@ -23,9 +23,6 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
 - Update grouping: major updates ungrouped and not automerged; non-major
   updates grouped by manager (GitHub Actions grouped separately from
   everything else)
-- [`kachick/renovate-config-dprint`](https://github.com/kachick/renovate-config-dprint)
-  for `dprint.json` plugin version updates (Renovate has no built-in dprint
-  manager)
 
 `go-tools/default.json` and `spoon-tools/default.json` intentionally do **not**
 extend this preset — they predate it and encode a deliberately different,
