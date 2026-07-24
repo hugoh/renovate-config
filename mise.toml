@@ -1,6 +1,8 @@
 [tools]
 node = "lts"
-"npm:renovate" = "latest"
+"npm:renovate" = { version = "latest", trust_policy_excludes = [
+  "@yarnpkg/libzip@3.2.2",
+] }
 hk = "1.52.0"
 actionlint = "latest"
 pinact = "latest"
