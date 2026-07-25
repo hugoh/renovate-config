@@ -7,7 +7,7 @@ min_hk_version = Base.min_hk_version
 local linters = new Mapping<String, Step> {
     ...Base.base
     ["renovate-config-validator"] = {
-        glob = List("default.json", ".renovaterc.json")
+        glob = List("default.json", ".renovaterc.json", "presets/*.json")
         check = "renovate-config-validator --strict --no-global {{files}}"
     }
 }
