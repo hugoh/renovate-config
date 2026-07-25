@@ -31,7 +31,8 @@
     {
       "matchManagers": ["github-actions"],
       "matchPackageNames": ["hugoh/gh-workflows"],
-      "extends": ["local>hugoh/renovate-config//presets/chain-debounce"]
+      "schedule": ["before 6am"],
+      "minimumReleaseAge": "1 day"
     }
   ]
 }
