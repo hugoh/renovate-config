@@ -31,7 +31,8 @@
     {
       "matchManagers": ["github-actions"],
       "matchPackageNames": ["hugoh/gh-workflows"],
-      "schedule": ["at any time"]
+      "schedule": ["before 6am"],
+      "minimumReleaseAge": "1 day"
     }
   ]
 }
