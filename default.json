@@ -4,9 +4,9 @@
     ":automergeAll",
     ":automergeBranch",
     "config:best-practices",
-    "github>hugoh/hk-config//renovate.json"
+    "github>hugoh/hk-config//renovate.json",
+    "schedule:monthly"
   ],
-  "schedule": ["before 6am on saturday"],
   "vulnerabilityAlerts": {
     "labels": ["security"],
     "automerge": true,
