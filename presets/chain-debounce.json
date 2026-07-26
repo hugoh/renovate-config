@@ -1,5 +1,5 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "schedule": ["before 6am"],
+  "schedule": ["before 6am on saturday"],
   "minimumReleaseAge": "1 day"
 }
