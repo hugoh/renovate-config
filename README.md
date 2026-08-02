@@ -20,11 +20,18 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
 
 - `config:best-practices` + `:automergeAll` + `:automergeBranch`
 - Vulnerability alerts: labeled `security`, automerged, checked anytime
-- Update grouping: major updates ungrouped and not automerged; non-major
-  updates grouped by manager (GitHub Actions grouped separately from
-  everything else)
+  (`presets/vulnerability-alerts.json`)
+- Update grouping: major updates ungrouped and not automerged
+  (`presets/major-updates-ungrouped.json`); non-major updates grouped by
+  manager (GitHub Actions grouped separately from everything else)
+- `npm:renovate` mise updates throttled to weekly via `chain-debounce`
+  (`presets/npm-renovate-debounce.json`)
 
-`go-tools/default.json` and `spoon-tools/default.json` intentionally do **not**
-extend this preset — they predate it and encode a deliberately different,
-more conservative policy for their own clusters (Go services, Hammerspoon
-spoons). This repo is for everything else.
+`go-tools/go-renovaterc.json` intentionally does **not** extend this
+preset wholesale — it predates it and encodes a deliberately different,
+more conservative policy for the Go cluster (longer `minimumReleaseAge`,
+narrower automerge scope). It does, however, extend the
+`vulnerability-alerts` and `major-updates-ungrouped` fragments above,
+since those two are identical across both clusters — only the genuinely
+divergent policy is kept separate. `spoon-tools/default.json` extends
+this preset directly and layers one extra rule on top.
