@@ -5,19 +5,12 @@
     ":automergeBranch",
     "config:best-practices",
     "github>hugoh/hk-config//renovate.json",
-    "schedule:monthly"
+    "schedule:monthly",
+    "local>hugoh/renovate-config//presets/vulnerability-alerts",
+    "local>hugoh/renovate-config//presets/major-updates-ungrouped",
+    "local>hugoh/renovate-config//presets/npm-renovate-debounce"
   ],
-  "vulnerabilityAlerts": {
-    "labels": ["security"],
-    "automerge": true,
-    "schedule": ["at any time"]
-  },
   "packageRules": [
-    {
-      "matchUpdateTypes": ["major"],
-      "groupName": "major updates",
-      "automerge": false
-    },
     {
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "matchManagers": ["!github-actions"],
