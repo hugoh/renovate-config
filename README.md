@@ -26,6 +26,8 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
   manager (GitHub Actions grouped separately from everything else)
 - `npm:renovate` mise updates throttled to weekly via `chain-debounce`
   (`presets/npm-renovate-debounce.json`)
+- Node.js versions from mise use LTS-aware versioning, so only Node
+  releases that reach LTS status are proposed (`presets/node-lts.json`)
 
 `go-tools/go-renovaterc.json` intentionally does **not** extend this
 preset wholesale — it predates it and encodes a deliberately different,

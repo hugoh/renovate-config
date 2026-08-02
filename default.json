@@ -8,7 +8,8 @@
     "schedule:monthly",
     "local>hugoh/renovate-config//presets/vulnerability-alerts",
     "local>hugoh/renovate-config//presets/major-updates-ungrouped",
-    "local>hugoh/renovate-config//presets/npm-renovate-debounce"
+    "local>hugoh/renovate-config//presets/npm-renovate-debounce",
+    "local>hugoh/renovate-config//presets/node-lts"
   ],
   "packageRules": [
     {
