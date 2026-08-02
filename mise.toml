@@ -1,5 +1,5 @@
 [tools]
-node = "lts"
+node = "24.18.1"
 "npm:renovate" = { version = "44.5.3", trust_policy_excludes = [
   "@yarnpkg/libzip@3.2.2",
 ] }
