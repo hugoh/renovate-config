@@ -6,6 +6,7 @@
     "config:best-practices",
     "github>hugoh/hk-config//renovate.json",
     "schedule:monthly",
+    ":maintainLockFilesMonthly",
     "local>hugoh/renovate-config//presets/vulnerability-alerts",
     "local>hugoh/renovate-config//presets/major-updates-ungrouped",
     "local>hugoh/renovate-config//presets/npm-renovate-debounce",
