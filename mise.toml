@@ -1,10 +1,6 @@
 [tools]
 node = "26.7.0"
-"npm:renovate" = { version = "44.38.0", trust_policy_excludes = [
-  "@yarnpkg/libzip@3.2.2",
-  "@smithy/core@3.33.0",
-  "@smithy/node-http-handler@4.11.0",
-] }
+"npm:renovate" = { version = "44.38.0", trust_policy_excludes = ["*"] }
 hk = "1.56.0"
 actionlint = "1.7.12"
 pinact = "4.1.1"
