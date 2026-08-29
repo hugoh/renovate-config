@@ -1,14 +1,14 @@
 [tools]
-node = "26.7.0"
-"npm:renovate" = { version = "44.38.0", trust_policy_excludes = ["*"] }
-hk = "1.56.0"
+node = "26.8.1"
+"npm:renovate" = { version = "44.50.1", trust_policy_excludes = ["*"] }
+hk = "1.56.1"
 actionlint = "1.7.12"
 pinact = "4.1.1"
 zizmor = "1.29.0"
 ghalint = "1.5.6"
 gitleaks = "8.30.1"
-typos = "1.49.0"
-rumdl = "0.2.58"
-tombi = "1.4.0"
+typos = "1.50.0"
+rumdl = "0.2.62"
+tombi = "1.5.0"
 "github:owenlamont/ryl" = "0.21.0"
 biome = "2.5.8"
