@@ -20,13 +20,7 @@
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "matchManagers": ["!github-actions"],
       "groupName": "non-major updates"
-    },
-    {
-      "matchManagers": ["github-actions"],
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "groupName": "github actions updates"
     },
     {
       "description": "First-party reusable workflows and composite actions: a bump only reaches consumers once a new tag is cut, so propagate within a day and automerge. Restricted to the repos that own these workflows/actions.",

@@ -33,9 +33,9 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
 - Vulnerability alerts: labeled `security`, automerged, checked anytime
   (`presets/vulnerability-alerts.json`).
 - Update grouping: major updates are one PR per package and never
-  automerged (`presets/major-updates-ungrouped.json`); everything else
-  splits into two groups — `github actions updates` and a single
-  `non-major updates` group for every other manager.
+  automerged (`presets/major-updates-ungrouped.json`); every other
+  minor/patch/pin/digest bump across all managers lands in a single
+  `non-major updates` PR.
 - First-party reusable workflows / composite actions
   (`hugoh/cog-bump`, `gh-workflows`, `go-tools`, `renovate-config`,
   `spoon-tools`, matched only when Renovate runs *in* one of those repos):
