@@ -1,10 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "For composite-action repos: only a bump to the published `action.yml` is `fix` (so `cog bump --auto` releases it). Action bumps in the repo's own CI workflows stay `chore`.",
+  "description": "For composite-action repos: only a bump to the published `action.yml` is `fix` (so `cog bump --auto` releases it). Action bumps in the repo's own CI workflows stay `chore`. `**/action.yml` so a nested action (e.g. `deploy/action.yml`) still matches.",
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
-      "matchFileNames": ["action.yml"],
+      "matchFileNames": ["action.yml", "**/action.yml"],
       "semanticCommitType": "fix"
     }
   ]
