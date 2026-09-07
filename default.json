@@ -28,14 +28,12 @@
       "matchManagers": ["github-actions"],
       "matchPackageNames": [
         "hugoh/cog-bump",
-        "hugoh/digest-action",
         "hugoh/gh-workflows",
         "hugoh/go-tools",
         "hugoh/spoon-tools"
       ],
       "matchRepositories": [
         "hugoh/cog-bump",
-        "hugoh/digest-action",
         "hugoh/gh-workflows",
         "hugoh/go-tools",
         "hugoh/spoon-tools"
