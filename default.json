@@ -24,9 +24,15 @@
       "groupName": "github actions updates"
     },
     {
-      "description": "First-party reusable workflows and composite actions: a bump only reaches consumers once a new tag is cut, so propagate within a day (not the monthly cadence) and automerge.",
+      "description": "First-party reusable workflows and composite actions: a bump only reaches consumers once a new tag is cut, so propagate within a day (not the monthly cadence) and automerge. Restricted to the repos that own these workflows/actions.",
       "matchManagers": ["github-actions"],
       "matchPackageNames": [
+        "hugoh/cog-bump",
+        "hugoh/gh-workflows",
+        "hugoh/go-tools",
+        "hugoh/spoon-tools"
+      ],
+      "matchRepositories": [
         "hugoh/cog-bump",
         "hugoh/gh-workflows",
         "hugoh/go-tools",
