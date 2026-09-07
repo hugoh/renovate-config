@@ -1,5 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "hugoh/hk-config//renovate.json is extended here so every consumer gets its custom managers (the hugoh/hk-config and jdx/hk pins in *.pkl / mise.toml) and its global disable of the built-in mise manager for `hk`. Repos with no hk.pkl are unaffected — those managers just match nothing. Since ~every repo uses hk.pkl, this is injected in the base rather than opted into per repo."
+  ],
   "timezone": "America/Chicago",
   "minimumReleaseAge": "3 days",
   "extends": [
