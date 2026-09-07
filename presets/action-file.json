@@ -1,0 +1,11 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "For composite-action repos: only a bump to the published `action.yml` is `fix` (so `cog bump --auto` releases it). Action bumps in the repo's own CI workflows stay `chore`.",
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "matchFileNames": ["action.yml"],
+      "semanticCommitType": "fix"
+    }
+  ]
+}

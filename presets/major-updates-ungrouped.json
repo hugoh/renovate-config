@@ -3,7 +3,6 @@
   "packageRules": [
     {
       "matchUpdateTypes": ["major"],
-      "groupName": "major updates",
       "automerge": false
     }
   ]

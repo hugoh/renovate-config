@@ -1,14 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["local>hugoh/renovate-config"],
-  "customManagers": [
-    {
-      "customType": "regex",
-      "managerFilePatterns": ["/^default\\.json$/"],
-      "matchStrings": [
-        "\"github>(?<depName>[^#\"]+)#(?<currentValue>[^\"]+)\""
-      ],
-      "datasourceTemplate": "github-tags"
-    }
-  ]
+  "extends": ["local>hugoh/renovate-config"]
 }

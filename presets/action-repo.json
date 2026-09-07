@@ -1,0 +1,10 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "For repos that publish a reusable workflow or whose CI content is itself the released artifact: mark every github-actions bump as `fix` so cocogitto's `cog bump --auto` cuts a release that propagates to consumers.",
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "semanticCommitType": "fix"
+    }
+  ]
+}
