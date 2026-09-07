@@ -30,12 +30,14 @@
         "hugoh/cog-bump",
         "hugoh/gh-workflows",
         "hugoh/go-tools",
+        "hugoh/renovate-config",
         "hugoh/spoon-tools"
       ],
       "matchRepositories": [
         "hugoh/cog-bump",
         "hugoh/gh-workflows",
         "hugoh/go-tools",
+        "hugoh/renovate-config",
         "hugoh/spoon-tools"
       ],
       "schedule": ["at any time"],
