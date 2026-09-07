@@ -1,9 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "platformAutomerge": false,
+  "timezone": "America/Chicago",
+  "minimumReleaseAge": "3 days",
   "extends": [
     ":automergeAll",
     "config:best-practices",
+    ":preserveSemverRanges",
     "github>hugoh/hk-config//renovate.json",
     "schedule:monthly",
     ":maintainLockFilesMonthly",
