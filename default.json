@@ -40,7 +40,7 @@
         "hugoh/spoon-tools"
       ],
       "schedule": ["at any time"],
-      "minimumReleaseAge": "1 day",
+      "minimumReleaseAge": "12 hours",
       "automerge": true
     }
   ]
