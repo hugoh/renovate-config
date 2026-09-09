@@ -11,7 +11,7 @@ permissions: {}
 
 jobs:
   hk:
-    uses: hugoh/gh-workflows/.github/workflows/hk.yml@f44d7f8d2ae57bf084a30a36be11184e2f90321c # v1.34.3
+    uses: hugoh/gh-workflows/.github/workflows/hk.yml@cab3d01fd9bcf9f2af0101c669690ab2305bc2c5 # v1.35.0
     permissions:
       contents: read
       packages: read
