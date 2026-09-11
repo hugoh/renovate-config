@@ -29,6 +29,7 @@
         "hugoh/cog-bump",
         "hugoh/gh-workflows",
         "hugoh/go-tools",
+        "hugoh/hk-config",
         "hugoh/renovate-config",
         "hugoh/spoon-tools"
       ],
@@ -36,6 +37,7 @@
         "hugoh/cog-bump",
         "hugoh/gh-workflows",
         "hugoh/go-tools",
+        "hugoh/hk-config",
         "hugoh/renovate-config",
         "hugoh/spoon-tools"
       ],
