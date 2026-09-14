@@ -1,7 +1,7 @@
 [tools]
 node = "26.8.1"
 "npm:renovate" = { version = "44.69.8", trust_policy_excludes = ["*"] }
-hk = "1.58.1"
+hk = "2.0.0"
 actionlint = "1.7.12"
 pinact = "4.1.1"
 zizmor = "1.30.0"
