@@ -28,14 +28,14 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
   Keeps `>=` floors in Python manifests from churning on every update.
 - `minimumReleaseAge: "3 days"` globally, `timezone: America/Chicago`.
 - `schedule:monthly` for regular updates; `:maintainLockFilesMonthly` for
-  lock file maintenance. Vulnerability alerts and first-party workflow
-  bumps (below) override this and run anytime.
+  lock file maintenance. Patch/pin/digest bumps run weekly instead, and
+  vulnerability alerts and first-party workflow bumps (below) run anytime.
 - Vulnerability alerts: labeled `security`, automerged, checked anytime
   (`presets/vulnerability-alerts.json`).
 - Update grouping: major updates are one PR per package and never
-  automerged (`presets/major-updates-ungrouped.json`); every other
-  minor/patch/pin/digest bump across all managers lands in a single
-  `non-major updates` PR.
+  automerged (`presets/major-updates-ungrouped.json`); minor bumps land in
+  a single monthly `minor updates` PR; patch/pin/digest bumps land in a
+  single weekly `patch updates` PR.
 - First-party reusable workflows / composite actions
   (`hugoh/cog-bump`, `gh-workflows`, `go-tools`, `renovate-config`,
   `spoon-tools`, matched only when Renovate runs *in* one of those repos):
