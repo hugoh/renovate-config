@@ -10,6 +10,7 @@
     ":automergeMinor",
     ":automergeDigest",
     "config:best-practices",
+    "customManagers:biomeVersions",
     ":preserveSemverRanges",
     "github>hugoh/hk-config//renovate.json",
     "schedule:monthly",
@@ -19,6 +20,12 @@
     "local>hugoh/renovate-config//presets/node-lts"
   ],
   "packageRules": [
+    {
+      "description": "config:best-practices pulls in security:minimumReleaseAgeNpm, whose packageRule lowers npm to 3 days and would otherwise override the top-level 7 days.",
+      "matchDatasources": ["npm"],
+      "matchUpdateTypes": ["major", "minor", "patch"],
+      "minimumReleaseAge": "7 days"
+    },
     {
       "matchUpdateTypes": ["minor"],
       "groupName": "minor updates"
