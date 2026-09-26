@@ -29,6 +29,17 @@ Repos that release from conventional commits need dependency bumps typed
   the published `action.yml` is `fix`. For composite-action repos
   (`cog-bump`, `digest-action`, `rerun-transient-failures`).
 
+### `presets/weekend`
+
+A `schedule` for Friday 5pm to Sunday 8am, early enough in the weekend
+to leave time to fix anything that breaks. The base config uses it for the
+weekly patch/pin/digest group. Extend it at the top level or inside a
+`packageRules` entry:
+
+```json
+"extends": ["github>hugoh/renovate-config//presets/weekend"]
+```
+
 ### The Go cluster
 
 `go-tools/go-renovaterc.json` intentionally does **not** extend this
