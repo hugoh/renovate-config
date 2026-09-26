@@ -1,0 +1,5 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Weekend window: Friday 5pm to Sunday 5am (in the consuming config's timezone). Updates land at the start of the weekend, leaving time to fix anything that breaks.",
+  "schedule": ["after 5pm on friday", "on saturday", "before 5am on sunday"]
+}
