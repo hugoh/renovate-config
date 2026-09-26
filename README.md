@@ -32,8 +32,8 @@ Repos that release from conventional commits need dependency bumps typed
 ### `presets/weekend`
 
 A `schedule` for Friday 5pm to Sunday 5am: updates land at the start of
-the weekend, leaving time to fix anything that breaks. The base config's
-weekly patch/pin/digest group uses the same window. Extend it at the top
+the weekend, leaving time to fix anything that breaks. The base config
+uses it for the weekly patch/pin/digest group. Extend it at the top
 level or inside a `packageRules` entry:
 
 ```json
