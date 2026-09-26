@@ -25,8 +25,9 @@
     },
     {
       "matchUpdateTypes": ["patch", "pin", "digest"],
+      "description": "Same window as presets/weekend. Inlined because renovate-config-validator resolves a packageRules `extends` from main, so it can't see a preset added in the same change; switch to extending presets/weekend once that preset is on main.",
       "groupName": "patch updates",
-      "extends": ["local>hugoh/renovate-config//presets/weekend"]
+      "schedule": ["after 5pm on friday", "on saturday", "before 5am on sunday"]
     },
     {
       "description": "First-party reusable workflows and composite actions: a bump only reaches consumers once a new tag is cut, so propagate within a day and automerge. Restricted to the repos that own these workflows/actions. Needs its own groupName so it isn't swallowed into the \"minor updates\"/\"patch updates\" groups above, which would otherwise pull in their monthly/weekly schedules instead of \"at any time\".",

@@ -1,5 +1,5 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Hold frequently released deps to the same Friday-evening window as the weekly patch group, so they don't add a second round of updates on the weekend.",
+  "description": "Hold frequently released deps to the same weekend window as the weekly patch group, instead of adding a separate update window.",
   "extends": ["local>hugoh/renovate-config//presets/weekend"]
 }
