@@ -29,6 +29,11 @@
       "extends": ["local>hugoh/renovate-config//presets/weekend"]
     },
     {
+      "description": "My own packages (actions, reusable workflows, spoons, ...) don't need the 7-day soak meant for third-party supply-chain risk: 1 day is enough to catch a bad release. Must stay above the first-party gh-workflows rule below so its 12-hour override still wins in the repos it covers.",
+      "matchPackageNames": ["hugoh/**"],
+      "minimumReleaseAge": "1 day"
+    },
+    {
       "description": "First-party reusable workflows and composite actions: a bump only reaches consumers once a new tag is cut, so propagate within a day and automerge. Restricted to the repos that own these workflows/actions. Needs its own groupName so it isn't swallowed into the \"minor updates\"/\"patch updates\" groups above, which would otherwise pull in their monthly/weekly schedules instead of \"at any time\".",
       "groupName": "first-party gh-workflows",
       "matchManagers": ["github-actions"],
