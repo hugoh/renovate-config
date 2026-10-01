@@ -13,8 +13,7 @@
     "customManagers:biomeVersions",
     ":preserveSemverRanges",
     "github>hugoh/hk-config//renovate.json",
-    "schedule:monthly",
-    ":maintainLockFilesMonthly",
+    "local>hugoh/renovate-config//presets/monthly",
     "local>hugoh/renovate-config//presets/vulnerability-alerts",
     "local>hugoh/renovate-config//presets/npm-renovate-debounce",
     "local>hugoh/renovate-config//presets/node-lts"
@@ -60,7 +59,7 @@
         "hugoh/renovate-config",
         "hugoh/spoon-tools"
       ],
-      "schedule": ["at any time"],
+      "schedule": ["* * * * *"],
       "minimumReleaseAge": "12 hours",
       "automerge": true
     }
