@@ -1,0 +1,9 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Monthly window: all day on the 1st (in the consuming config's timezone). Replaces schedule:monthly, whose 00:00-03:59 window can close before Renovate has worked through every branch under prHourlyLimit.",
+  "schedule": ["* * 1 * *"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["* * 1 * *"]
+  }
+}
