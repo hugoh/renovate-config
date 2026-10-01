@@ -47,3 +47,10 @@ preset wholesale — it encodes a deliberately more conservative policy for
 the Go cluster. It does reuse the `vulnerability-alerts`
 fragment, since that's identical across both clusters. `spoon-tools/default.json`
 extends this preset directly and layers a `lua` version ceiling on top.
+
+### `presets/monthly`
+
+Replaces `schedule:monthly` and `:maintainLockFilesMonthly`: updates and
+lock file maintenance run all day on the 1st, not just 00:00–03:59, so
+`prHourlyLimit` can't leave branches unprocessed until next month. The
+base config uses it.
