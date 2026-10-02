@@ -1,0 +1,11 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Policy shared by every hub (renovate-config's default.json, go-tools' go-renovaterc): the timezone the schedule presets are evaluated in, the 7-day third-party release-age soak, the monthly window, vulnerability alerts, and hugoh/hk-config//renovate.json (how to read the hk pins; presets/hk-toolchain says how they group). Hubs keep their ecosystem rules and groups on top of this.",
+  "timezone": "America/Chicago",
+  "minimumReleaseAge": "7 days",
+  "extends": [
+    "github>hugoh/hk-config//renovate.json",
+    "local>hugoh/renovate-config//presets/monthly",
+    "local>hugoh/renovate-config//presets/vulnerability-alerts"
+  ]
+}
