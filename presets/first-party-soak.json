@@ -1,0 +1,5 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "1-day release-age soak for my own packages (actions, reusable workflows, spoons, go-tools). The 7-day third-party soak guards against supply-chain risk; my own releases are frequent enough that it keeps restarting, so a pending update never matures (copier updates from go-tools sat on old template versions). A preset can't carry match* options: extend this from a packageRule that matches the first-party packages.",
+  "minimumReleaseAge": "1 day"
+}

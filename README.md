@@ -94,6 +94,31 @@ Three small presets the base config always extends:
 - `vulnerability-alerts` labels security PRs, automerges them at any time and
   only waits 6 hours.
 
+### `presets/base`
+
+Policy every hub shares, so it is defined once: the timezone the schedule
+presets are evaluated in (`America/Chicago`), the 7-day third-party
+`minimumReleaseAge`, `presets/monthly`, `presets/vulnerability-alerts`, and
+`hugoh/hk-config//renovate.json` (how to read the hk pins). `default.json` and
+go-tools' `go-renovaterc.json` extend it and add their own ecosystem rules and
+groups on top.
+
+### `presets/first-party-soak`
+
+A 1-day `minimumReleaseAge` for my own packages (actions, reusable workflows,
+spoons, go-tools). A preset cannot carry `match*` options, so extend it from a
+`packageRule` that matches the first-party packages:
+
+```json
+{
+  "matchPackageNames": ["hugoh/**"],
+  "extends": ["github>hugoh/renovate-config//presets/first-party-soak"]
+}
+```
+
+go-tools releases several times a day, so the 7-day third-party soak kept
+restarting and its copier updates never matured; this is the fix.
+
 ### `presets/hk-toolchain`
 
 Policy for the `jdx/hk` and `hugoh/hk-config` pins: they move in **one** PR
