@@ -20,12 +20,13 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
 
 `default.json` is the fleet policy. In the order Renovate applies it:
 
-1. **Extends** Renovate's `config:best-practices` and automerge presets,
-   `hugoh/hk-config//renovate.json` (how to *read* the hk pins, see below)
-   and the small presets under `presets/`.
-2. **Soak and schedule**: a 7-day `minimumReleaseAge` for third parties (1 day
-   for `hugoh/**`), and a monthly window (`presets/monthly`) for everything
-   not overridden below.
+1. **Extends** Renovate's `config:best-practices` and automerge presets, and
+   the presets under `presets/`, chiefly `presets/base` (shared with go-tools'
+   `go-renovaterc`): the timezone, the monthly window, vulnerability alerts and
+   `hugoh/hk-config//renovate.json` (how to *read* the hk pins, see below).
+2. **Soak and schedule**: a 7-day `minimumReleaseAge` for third parties (from
+   `presets/base`), 1 day for `hugoh/**` (`presets/first-party-soak`), and the
+   monthly window for everything not overridden below.
 3. **Groups**: all minor updates in one PR (`minor updates`); patch, pin and
    digest updates in another (`patch updates`, weekend window).
 4. **First-party fast lane**: the reusable workflows and composite actions in
@@ -139,7 +140,7 @@ its **last** `packageRule`:
 ```
 
 Hubs today: this repo's `default.json` and `go-tools`' `go-renovaterc.json`
-(which does not extend `default.json`).
+(which does not extend `default.json`, but does extend `presets/base`).
 
 ### Rule order matters (and the hk toolchain group)
 

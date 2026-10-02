@@ -1,10 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": [
-    "hugoh/hk-config//renovate.json is extended here so every consumer gets its custom managers (the hugoh/hk-config and jdx/hk pins in *.pkl / mise.toml) and its global disable of the built-in mise manager for `hk`. Repos with no hk.pkl are unaffected — those managers just match nothing. Since ~every repo uses hk.pkl, this is injected in the base rather than opted into per repo."
+    "hugoh/hk-config//renovate.json is extended (through presets/base) so every consumer gets its custom managers (the hugoh/hk-config and jdx/hk pins in *.pkl / mise.toml) and its global disable of the built-in mise manager for `hk`. Repos with no hk.pkl are unaffected — those managers just match nothing. Since ~every repo uses hk.pkl, this is injected in the base rather than opted into per repo. The timezone, 7-day soak, monthly window and vulnerability alerts also come from presets/base."
   ],
-  "timezone": "America/Chicago",
-  "minimumReleaseAge": "7 days",
   "extends": [
     ":automergeLinters",
     ":automergeMinor",
@@ -12,9 +10,7 @@
     "config:best-practices",
     "customManagers:biomeVersions",
     ":preserveSemverRanges",
-    "github>hugoh/hk-config//renovate.json",
-    "local>hugoh/renovate-config//presets/monthly",
-    "local>hugoh/renovate-config//presets/vulnerability-alerts",
+    "local>hugoh/renovate-config//presets/base",
     "local>hugoh/renovate-config//presets/npm-renovate-debounce",
     "local>hugoh/renovate-config//presets/node-lts"
   ],
@@ -37,7 +33,7 @@
     {
       "description": "My own packages (actions, reusable workflows, spoons, ...) don't need the 7-day soak meant for third-party supply-chain risk: 1 day is enough to catch a bad release. Must stay above the first-party gh-workflows rule below so its 12-hour override still wins in the repos it covers.",
       "matchPackageNames": ["hugoh/**"],
-      "minimumReleaseAge": "1 day"
+      "extends": ["local>hugoh/renovate-config//presets/first-party-soak"]
     },
     {
       "description": "First-party reusable workflows and composite actions: a bump only reaches consumers once a new tag is cut, so propagate within a day and automerge. Restricted to the repos that own these workflows/actions. Needs its own groupName so it isn't swallowed into the \"minor updates\"/\"patch updates\" groups above, which would otherwise pull in their monthly/weekly schedules instead of \"at any time\".",
