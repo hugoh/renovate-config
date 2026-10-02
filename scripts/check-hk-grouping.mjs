@@ -145,6 +145,30 @@ for (const [name, input, expected] of cases) {
     `${ok ? "ok  " : "FAIL"} ${name}: groupName=${out.groupName} (want ${expected})`,
   );
 }
+// Soak and timezone come from the shared presets (presets/base and
+// presets/first-party-soak); make sure adopting them kept the policy intact.
+const base = resolveExtends(config);
+const soakCases = [
+  ["first-party package: 1 day", "hugoh/some-tool", "github-tags", "1 day"],
+  ["third-party package: 7 days", "biomejs/biome", "github-releases", "7 days"],
+];
+for (const [name, packageName, datasource, expected] of soakCases) {
+  const out = await applyPackageRules({
+    ...update(packageName, datasource, "minor"),
+    minimumReleaseAge: base.minimumReleaseAge,
+  });
+  const ok = out.minimumReleaseAge === expected;
+  if (!ok) failed = true;
+  console.log(
+    `${ok ? "ok  " : "FAIL"} ${name}: minimumReleaseAge=${out.minimumReleaseAge} (want ${expected})`,
+  );
+}
+if (base.timezone !== "America/Chicago") {
+  failed = true;
+  console.log(`FAIL timezone: ${base.timezone} (want America/Chicago)`);
+} else {
+  console.log("ok   timezone: America/Chicago");
+}
 if (ages.size !== 1 || ages.has(undefined)) {
   failed = true;
   console.log(
