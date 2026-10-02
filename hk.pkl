@@ -10,6 +10,13 @@ local linters = new Mapping<String, Step> {
     ["renovate_config_validator"] = (Base.renovate["renovate_config_validator"]) {
         glob = List("default.json", ".renovaterc.json", "presets/*.json")
     }
+    // The hk toolchain group must stay below the generic minor/patch grouping
+    // rules in default.json (README: "Rule order matters"); this evaluates the
+    // rules with Renovate's own matcher and fails if the group is lost.
+    ["hk-grouping"] {
+        glob = List("default.json", "scripts/check-hk-grouping.mjs")
+        check = "node scripts/check-hk-grouping.mjs"
+    }
 }
 
 steps = linters

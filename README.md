@@ -55,11 +55,23 @@ lock file maintenance run all day on the 1st, not just 00:00–03:59, so
 `prHourlyLimit` can't leave branches unprocessed until next month. The
 base config uses it.
 
-### Rule order matters
+### Rule order matters (and the hk toolchain group)
 
 Renovate applies `packageRules` top to bottom and the last matching rule wins
-for each field. The `hk toolchain` rule (the `jdx/hk` and `hugoh/hk-config`
-pins) must stay **below** the generic `minor updates` / `patch updates` grouping
-rules in `default.json`, or their `groupName` replaces it and the two pins split
-across PRs. It also sets a 1-day `minimumReleaseAge` so a fresh hk-config
-release and the hk version it targets become eligible together.
+for each field. This file's own rules come after everything pulled in through
+`extends`, so the generic `minor updates` / `patch updates` groups would
+override a `groupName` set by an extended preset.
+
+Ownership of the hk pins is split on purpose:
+
+- `hugoh/hk-config//renovate.json` (extended above) only teaches Renovate
+  *how to read* the `jdx/hk` and `hugoh/hk-config` pins (custom managers for
+  `.pkl` and `mise.toml`, and disabling the built-in `mise` manager for `hk`).
+- This repo decides *how they are grouped and when*: the `hk toolchain` rule
+  at the end of `default.json`. It must stay **below** the generic grouping
+  rules, with a 1-day `minimumReleaseAge`, so a fresh hk-config release and the
+  hk version it targets become eligible together and land in one PR.
+
+`scripts/check-hk-grouping.mjs` (the `hk-grouping` step in `hk.pkl`) enforces
+this: it runs `default.json`'s rules through Renovate's own matcher and fails
+if the two pins stop sharing the `hk toolchain` group.
