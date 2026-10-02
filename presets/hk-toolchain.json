@@ -1,0 +1,7 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Policy for the hk toolchain: the jdx/hk and hugoh/hk-config pins move in ONE PR, so the Pkl schema pin, the CLI pin in mise.toml and the base.pkl they were validated against never drift. 1-day minimumReleaseAge instead of the 7-day third-party soak, so jdx/hk doesn't age past a fresh hk-config release and split the group; weekend window via chain-debounce. A preset can't carry match* options, so every hub adds the matcher itself, as the LAST packageRule: { matchManagers: [custom.regex], matchPackageNames: [jdx/hk, hugoh/hk-config], extends: [<this preset>] }. It must come after the hub's generic minor/patch grouping rules, or their groupName replaces this one (later packageRules win).",
+  "groupName": "hk toolchain",
+  "minimumReleaseAge": "1 day",
+  "extends": ["local>hugoh/renovate-config//presets/chain-debounce"]
+}
