@@ -62,6 +62,14 @@
       "schedule": ["* * * * *"],
       "minimumReleaseAge": "12 hours",
       "automerge": true
+    },
+    {
+      "description": "Keep the jdx/hk and hugoh/hk-config pins in ONE PR (the Pkl schema pin, the CLI pin in mise.toml and the base.pkl they were validated against must move together). The managers come from hugoh/hk-config//renovate.json, but its groupName is overridden by the generic minor/patch grouping rules above, so the rule is repeated here — it must stay BELOW them (later packageRules win). 1 day instead of the 7-day third-party soak so jdx/hk doesn't age past a fresh hk-config release and split the group.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["jdx/hk", "hugoh/hk-config"],
+      "groupName": "hk toolchain",
+      "minimumReleaseAge": "1 day",
+      "extends": ["local>hugoh/renovate-config//presets/chain-debounce"]
     }
   ]
 }

@@ -54,3 +54,12 @@ Replaces `schedule:monthly` and `:maintainLockFilesMonthly`: updates and
 lock file maintenance run all day on the 1st, not just 00:00–03:59, so
 `prHourlyLimit` can't leave branches unprocessed until next month. The
 base config uses it.
+
+### Rule order matters
+
+Renovate applies `packageRules` top to bottom and the last matching rule wins
+for each field. The `hk toolchain` rule (the `jdx/hk` and `hugoh/hk-config`
+pins) must stay **below** the generic `minor updates` / `patch updates` grouping
+rules in `default.json`, or their `groupName` replaces it and the two pins split
+across PRs. It also sets a 1-day `minimumReleaseAge` so a fresh hk-config
+release and the hk version it targets become eligible together.
