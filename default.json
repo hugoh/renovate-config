@@ -64,7 +64,7 @@
       "automerge": true
     },
     {
-      "description": "Keep the jdx/hk and hugoh/hk-config pins in ONE PR (the Pkl schema pin, the CLI pin in mise.toml and the base.pkl they were validated against must move together). The managers come from hugoh/hk-config//renovate.json, but its groupName is overridden by the generic minor/patch grouping rules above, so the rule is repeated here — it must stay BELOW them (later packageRules win). 1 day instead of the 7-day third-party soak so jdx/hk doesn't age past a fresh hk-config release and split the group.",
+      "description": "Single owner of the hk toolchain grouping: the jdx/hk and hugoh/hk-config pins (custom managers from hugoh/hk-config//renovate.json, which only reads the pins) move in ONE PR, so the Pkl schema pin, the CLI pin in mise.toml and the base.pkl they were validated against never drift. Must stay BELOW the generic minor/patch grouping rules above, or their groupName replaces this one (later packageRules win); scripts/check-hk-grouping.mjs enforces it. 1-day minimumReleaseAge instead of the 7-day third-party soak, so jdx/hk doesn't age past a fresh hk-config release and split the group.",
       "matchManagers": ["custom.regex"],
       "matchPackageNames": ["jdx/hk", "hugoh/hk-config"],
       "groupName": "hk toolchain",
