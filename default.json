@@ -64,12 +64,10 @@
       "automerge": true
     },
     {
-      "description": "Single owner of the hk toolchain grouping: the jdx/hk and hugoh/hk-config pins (custom managers from hugoh/hk-config//renovate.json, which only reads the pins) move in ONE PR, so the Pkl schema pin, the CLI pin in mise.toml and the base.pkl they were validated against never drift. Must stay BELOW the generic minor/patch grouping rules above, or their groupName replaces this one (later packageRules win); scripts/check-hk-grouping.mjs enforces it. 1-day minimumReleaseAge instead of the 7-day third-party soak, so jdx/hk doesn't age past a fresh hk-config release and split the group.",
+      "description": "The hk toolchain group (policy in presets/hk-toolchain). Must stay BELOW the generic minor/patch grouping rules above, or their groupName replaces it (later packageRules win); scripts/check-hk-grouping.mjs enforces it. The same matcher is repeated by every other hub that extends hugoh/hk-config//renovate.json (e.g. go-tools' go-renovaterc).",
       "matchManagers": ["custom.regex"],
       "matchPackageNames": ["jdx/hk", "hugoh/hk-config"],
-      "groupName": "hk toolchain",
-      "minimumReleaseAge": "1 day",
-      "extends": ["local>hugoh/renovate-config//presets/chain-debounce"]
+      "extends": ["local>hugoh/renovate-config//presets/hk-toolchain"]
     }
   ]
 }

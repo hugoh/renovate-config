@@ -6,6 +6,10 @@
 // "patch updates" rule gets placed after the hk toolchain rule and replaces
 // its groupName.
 //
+// Presets under presets/ that a rule extends (e.g. presets/hk-toolchain, which
+// carries the group name, soak and schedule) are resolved from this checkout,
+// the way Renovate merges them beneath the rule's own settings.
+//
 // Offline and fast: it only evaluates default.json's own rules. The rule
 // order inside default.json is what decides the outcome, because rules that
 // come in through `extends` (hk-config's managers) are applied before them.
@@ -60,8 +64,30 @@ function findRenovate() {
 const rules = join(findRenovate(), "dist", "util", "package-rules", "index.js");
 const { applyPackageRules } = await import(rules);
 
+const presetsDir = join(here, "..", "presets");
+const OWN_PRESET =
+  /^(?:local|github)>hugoh\/renovate-config\/\/presets\/([\w-]+)$/;
+
+// Merge the repo's own presets beneath a rule (or preset) that extends them.
+// Built-in and external presets are ignored: they don't affect grouping.
+function resolveExtends(rule) {
+  const { extends: extended = [], ...own } = rule;
+  let merged = {};
+  for (const name of extended) {
+    const match = OWN_PRESET.exec(name);
+    if (!match) continue;
+    const { $schema, description, ...preset } = JSON.parse(
+      readFileSync(join(presetsDir, `${match[1]}.json`), "utf8"),
+    );
+    merged = { ...merged, ...resolveExtends(preset) };
+  }
+  return { ...merged, ...own };
+}
+
+const packageRules = config.packageRules.map(resolveExtends);
+
 const update = (packageName, datasource, updateType) => ({
-  packageRules: config.packageRules,
+  packageRules,
   depName: packageName,
   packageName,
   manager: "custom.regex",
@@ -106,11 +132,15 @@ const cases = [
 
 let failed = false;
 const ages = new Set();
+const schedules = new Set();
 for (const [name, input, expected] of cases) {
   const out = await applyPackageRules(input);
   const ok = out.groupName === expected;
   if (!ok) failed = true;
-  if (expected === "hk toolchain") ages.add(out.minimumReleaseAge);
+  if (expected === "hk toolchain") {
+    ages.add(out.minimumReleaseAge);
+    schedules.add(JSON.stringify(out.schedule));
+  }
   console.log(
     `${ok ? "ok  " : "FAIL"} ${name}: groupName=${out.groupName} (want ${expected})`,
   );
@@ -119,6 +149,12 @@ if (ages.size !== 1 || ages.has(undefined)) {
   failed = true;
   console.log(
     `FAIL hk toolchain members must share one minimumReleaseAge, got: ${[...ages].join(", ")}`,
+  );
+}
+if (schedules.size !== 1 || schedules.has(undefined)) {
+  failed = true;
+  console.log(
+    `FAIL hk toolchain members must share one schedule, got: ${[...schedules].join(", ")}`,
   );
 }
 if (failed) {

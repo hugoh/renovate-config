@@ -94,24 +94,45 @@ Three small presets the base config always extends:
 - `vulnerability-alerts` labels security PRs, automerges them at any time and
   only waits 6 hours.
 
+### `presets/hk-toolchain`
+
+Policy for the `jdx/hk` and `hugoh/hk-config` pins: they move in **one** PR
+(group `hk toolchain`), after a 1-day soak, in the weekend window, so the Pkl
+schema pin, the CLI pin in `mise.toml` and the `base.pkl` they were validated
+against never drift apart.
+
+A preset cannot carry `match*` options (the validator rejects them), so every
+hub that extends `hugoh/hk-config//renovate.json` adds the matcher itself, as
+its **last** `packageRule`:
+
+```json
+{
+  "matchManagers": ["custom.regex"],
+  "matchPackageNames": ["jdx/hk", "hugoh/hk-config"],
+  "extends": ["github>hugoh/renovate-config//presets/hk-toolchain"]
+}
+```
+
+Hubs today: this repo's `default.json` and `go-tools`' `go-renovaterc.json`
+(which does not extend `default.json`).
+
 ### Rule order matters (and the hk toolchain group)
 
 Renovate applies `packageRules` top to bottom and the last matching rule wins
-for each field. This file's own rules come after everything pulled in through
-`extends`, so the generic `minor updates` / `patch updates` groups would
-override a `groupName` set by an extended preset.
+for each field. A hub's own rules come after everything pulled in through
+`extends`, so a hub's generic `minor updates` / `patch updates` groups would
+override a `groupName` set by an extended preset. That is why the matcher above
+must be the last rule.
 
 Ownership of the hk pins is split on purpose:
 
-- `hugoh/hk-config//renovate.json` (extended by `default.json`) only teaches
-  Renovate *how to read* the `jdx/hk` and `hugoh/hk-config` pins (custom
-  managers for `.pkl` and `mise.toml`, and disabling the built-in `mise`
-  manager for `hk`).
-- This repo decides *how they are grouped and when*: the `hk toolchain` rule
-  at the end of `default.json`. It must stay **below** the generic grouping
-  rules, with a 1-day `minimumReleaseAge`, so a fresh hk-config release and the
-  hk version it targets become eligible together and land in one PR.
+- `hugoh/hk-config//renovate.json` only teaches Renovate *how to read* the
+  `jdx/hk` and `hugoh/hk-config` pins (custom managers for `.pkl` and
+  `mise.toml`, and disabling the built-in `mise` manager for `hk`).
+- `presets/hk-toolchain` decides *how they are grouped and when*.
+- Each hub only says *where* the preset applies, with the matcher.
 
 `scripts/check-hk-grouping.mjs` (the `hk-grouping` step in `hk.pkl`) enforces
-this: it runs `default.json`'s rules through Renovate's own matcher and fails
-if the two pins stop sharing the `hk toolchain` group.
+this for `default.json`: it resolves the preset from this checkout, runs the
+rules through Renovate's own matcher and fails if the two pins stop sharing the
+`hk toolchain` group, soak and schedule.
