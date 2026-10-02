@@ -10,10 +10,10 @@
 // order inside default.json is what decides the outcome, because rules that
 // come in through `extends` (hk-config's managers) are applied before them.
 //
-// Renovate is located via RENOVATE_DIR, or from the `renovate-config-validator`
-// binary on PATH (the mise-installed npm:renovate).
+// Renovate is located via RENOVATE_DIR, or `mise where npm:renovate` (the
+// mise-installed npm:renovate pinned in mise.toml).
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -22,22 +22,39 @@ const config = JSON.parse(
   readFileSync(join(here, "..", "default.json"), "utf8"),
 );
 
+function isRenovate(dir) {
+  const pkg = join(dir, "package.json");
+  return (
+    existsSync(pkg) && JSON.parse(readFileSync(pkg, "utf8")).name === "renovate"
+  );
+}
+
+// Depth-limited search for a `renovate` package directory. mise/aube install
+// it under node_modules/.mise/renovate@<ver>_<deps>/node_modules/renovate.
+function search(dir, depth) {
+  if (isRenovate(dir)) return dir;
+  if (depth === 0) return undefined;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
+    try {
+      const found = search(join(dir, entry.name), depth - 1);
+      if (found) return found;
+    } catch {
+      // unreadable or dangling entry: keep looking
+    }
+  }
+  return undefined;
+}
+
 function findRenovate() {
   if (process.env.RENOVATE_DIR) return resolve(process.env.RENOVATE_DIR);
-  const bin = execFileSync("which", ["renovate-config-validator"], {
+  const where = execFileSync("mise", ["where", "npm:renovate"], {
     encoding: "utf8",
   }).trim();
-  let dir = dirname(realpathSync(bin));
-  while (dir !== dirname(dir)) {
-    const pkg = join(dir, "package.json");
-    if (
-      existsSync(pkg) &&
-      JSON.parse(readFileSync(pkg, "utf8")).name === "renovate"
-    )
-      return dir;
-    dir = dirname(dir);
-  }
-  throw new Error("could not locate the renovate package; set RENOVATE_DIR");
+  const found = search(where, 7);
+  if (!found)
+    throw new Error(`no renovate package under ${where}; set RENOVATE_DIR`);
+  return found;
 }
 
 const rules = join(findRenovate(), "dist", "util", "package-rules", "index.js");
