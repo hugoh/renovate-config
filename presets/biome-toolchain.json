@@ -1,6 +1,0 @@
-{
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Policy for the biome toolchain: the biome CLI pin in mise.toml and the $schema URL in biome.json move in ONE PR, so the CLI never lags the schema it validates against (biome warns when they differ). The two are read by different managers (mise and customManagers:biomeVersions), so nothing else links them. Weekend window via chain-debounce. A preset can't carry match* options, so every hub adds the matcher itself, as the LAST packageRule: { matchDepNames: [biome, biomejs/biome, @biomejs/biome], extends: [<this preset>] }. It must come after the hub's generic minor/patch grouping rules, or their groupName replaces this one (later packageRules win).",
-  "groupName": "biome toolchain",
-  "extends": ["local>hugoh/renovate-config//presets/chain-debounce"]
-}
