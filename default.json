@@ -64,6 +64,12 @@
       "matchManagers": ["custom.regex"],
       "matchPackageNames": ["jdx/hk", "hugoh/hk-config"],
       "extends": ["local>hugoh/renovate-config//presets/hk-toolchain"]
+    },
+    {
+      "description": "The biome toolchain group: the CLI pin in mise.toml and the $schema URL in biome.json (read by customManagers:biomeVersions) are read by different managers, so group them to move in ONE PR and keep the CLI from lagging the schema it validates against (biome warns when they differ). Weekend window via chain-debounce. Like the hk toolchain rule, it must stay BELOW the generic minor/patch grouping rules above.",
+      "matchDepNames": ["biome", "biomejs/biome", "@biomejs/biome"],
+      "groupName": "biome toolchain",
+      "extends": ["local>hugoh/renovate-config//presets/chain-debounce"]
     }
   ]
 }
