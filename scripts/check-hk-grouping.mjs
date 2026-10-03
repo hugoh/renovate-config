@@ -86,11 +86,17 @@ function resolveExtends(rule) {
 
 const packageRules = config.packageRules.map(resolveExtends);
 
-const update = (packageName, datasource, updateType) => ({
-  packageRules,
-  depName: packageName,
+const update = (
   packageName,
-  manager: "custom.regex",
+  datasource,
+  updateType,
+  manager = "custom.regex",
+  depName = packageName,
+) => ({
+  packageRules,
+  depName,
+  packageName,
+  manager,
   datasource,
   updateType,
 });
@@ -117,15 +123,37 @@ const cases = [
     update("hugoh/hk-config", "github-tags", "patch"),
     "hk toolchain",
   ],
+  // biome: the $schema URL (custom.regex) and the mise.toml pin (mise) must
+  // land in one group, or the CLI drifts from the schema.
+  [
+    "biome schema patch",
+    update("biomejs/biome", "github-releases", "patch"),
+    "biome toolchain",
+  ],
+  [
+    "biome schema minor",
+    update("biomejs/biome", "github-releases", "minor"),
+    "biome toolchain",
+  ],
+  [
+    "biome mise pin patch",
+    update("biomejs/biome", "github-releases", "patch", "mise", "biome"),
+    "biome toolchain",
+  ],
+  [
+    "biome mise pin minor",
+    update("biomejs/biome", "github-releases", "minor", "mise", "biome"),
+    "biome toolchain",
+  ],
   // Controls: the generic groups must still apply to everything else.
   [
     "other custom.regex minor",
-    update("biomejs/biome", "github-releases", "minor"),
+    update("example/other", "github-releases", "minor"),
     "minor updates",
   ],
   [
     "other custom.regex patch",
-    update("biomejs/biome", "github-releases", "patch"),
+    update("example/other", "github-releases", "patch"),
     "patch updates",
   ],
 ];

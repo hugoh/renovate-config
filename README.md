@@ -162,3 +162,9 @@ Ownership of the hk pins is split on purpose:
 this for `default.json`: it resolves the preset from this checkout, runs the
 rules through Renovate's own matcher and fails if the two pins stop sharing the
 `hk toolchain` group, soak and schedule.
+
+The `biome toolchain` group (`presets/biome-toolchain`) works the same way for
+biome: the `biome` pin in `mise.toml` and the `$schema` URL in `biome.json` are
+read by different managers, so without a shared group one can land a release
+before the other and biome reports a schema/CLI version mismatch. Its matcher
+is also the last rule in `default.json`, and the same script checks it.
