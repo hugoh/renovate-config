@@ -1,0 +1,14 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "npm packages loaded from cdn.jsdelivr.net/npm/<pkg>@<version>/ in HTML and templates. The built-in html manager only reads cdnjs. It cannot recompute SRI hashes, so these links must not carry an integrity attribute.",
+      "managerFilePatterns": ["/\\.(html?|j2|njk)$/"],
+      "matchStrings": [
+        "cdn\\.jsdelivr\\.net/npm/(?<depName>@?[^@/\"'\\s]+(?:/[^@/\"'\\s]+)?)@(?<currentValue>[^/\"'\\s]+)/"
+      ],
+      "datasourceTemplate": "npm"
+    }
+  ]
+}

@@ -12,7 +12,8 @@
     ":preserveSemverRanges",
     "local>hugoh/renovate-config//presets/base",
     "local>hugoh/renovate-config//presets/npm-renovate-debounce",
-    "local>hugoh/renovate-config//presets/node-lts"
+    "local>hugoh/renovate-config//presets/node-lts",
+    "local>hugoh/renovate-config//presets/jsdelivr-npm"
   ],
   "packageRules": [
     {

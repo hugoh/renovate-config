@@ -86,12 +86,16 @@ and would otherwise open a PR for each) to the weekend window. It is just
 
 ### The always-on fragments
 
-Three small presets the base config always extends:
+Small presets the config always extends:
 
 - `npm-renovate-debounce` applies `chain-debounce` to the mise-managed
   `npm:renovate` pin.
 - `node-lts` makes the mise manager treat `node` versions with Node's
   versioning, so only LTS-style bumps are proposed.
+- `jsdelivr-npm` is a regex manager for `cdn.jsdelivr.net/npm/<pkg>@<ver>/`
+  links in `.html`/`.j2`/`.njk` files (the built-in html manager only reads
+  cdnjs). It can't refresh SRI hashes, so those links must not carry
+  `integrity`.
 - `vulnerability-alerts` labels security PRs, automerges them at any time and
   only waits 6 hours.
 
