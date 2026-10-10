@@ -191,6 +191,26 @@ for (const [name, packageName, datasource, expected] of soakCases) {
     `${ok ? "ok  " : "FAIL"} ${name}: minimumReleaseAge=${out.minimumReleaseAge} (want ${expected})`,
   );
 }
+// Minor and patch share the weekend window; major gets no rule-level schedule
+// and so falls through to the monthly window from presets/base.
+const weekend = resolveExtends({
+  extends: ["local>hugoh/renovate-config//presets/weekend"],
+}).schedule;
+const scheduleCases = [
+  ["minor schedule: weekend", "minor", weekend],
+  ["patch schedule: weekend", "patch", weekend],
+  ["major schedule: monthly fallthrough", "major", undefined],
+];
+for (const [name, updateType, expected] of scheduleCases) {
+  const out = await applyPackageRules(
+    update("example/other", "github-releases", updateType),
+  );
+  const ok = JSON.stringify(out.schedule) === JSON.stringify(expected);
+  if (!ok) failed = true;
+  console.log(
+    `${ok ? "ok  " : "FAIL"} ${name}: schedule=${JSON.stringify(out.schedule)}`,
+  );
+}
 if (base.timezone !== "America/Chicago") {
   failed = true;
   console.log(`FAIL timezone: ${base.timezone} (want America/Chicago)`);
