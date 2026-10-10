@@ -26,9 +26,9 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
    `hugoh/hk-config//renovate.json` (how to *read* the hk pins, see below).
 2. **Soak and schedule**: a 7-day `minimumReleaseAge` for third parties (from
    `presets/base`), 1 day for `hugoh/**` (`presets/first-party-soak`), and the
-   monthly window for everything not overridden below.
+   monthly window for everything not overridden below (major updates).
 3. **Groups**: all minor updates in one PR (`minor updates`); patch, pin and
-   digest updates in another (`patch updates`, weekend window).
+   digest updates in another (`patch updates`). Both use the weekend window.
 4. **First-party fast lane**: the reusable workflows and composite actions in
    my own repos propagate within a day and automerge (`first-party
    gh-workflows`).
@@ -54,7 +54,7 @@ Repos that release from conventional commits need dependency bumps typed
 
 A `schedule` for Friday 5pm to Sunday 5am: updates land at the start of
 the weekend, leaving time to fix anything that breaks. The base config
-uses it for the weekly patch/pin/digest group and, through `chain-debounce`,
+uses it for the weekly minor and patch/pin/digest groups and, through `chain-debounce`,
 for the hk toolchain. Extend it at the top level or inside a `packageRules`
 entry:
 

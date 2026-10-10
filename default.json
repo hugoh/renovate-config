@@ -24,7 +24,8 @@
     },
     {
       "matchUpdateTypes": ["minor"],
-      "groupName": "minor updates"
+      "groupName": "minor updates",
+      "extends": ["local>hugoh/renovate-config//presets/weekend"]
     },
     {
       "matchUpdateTypes": ["patch", "pin", "digest"],
