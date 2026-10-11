@@ -32,7 +32,7 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
 4. **First-party fast lane**: the reusable workflows and composite actions in
    my own repos propagate within a day and automerge (`first-party
    gh-workflows`).
-5. **`hk toolchain`**: last, so it wins over the generic groups (see below).
+5. **`biome toolchain`**: last, so it wins over the generic groups (see below).
 
 A consuming repo's own `packageRules` come after all of this, so they can
 override any of it.
@@ -55,7 +55,7 @@ Repos that release from conventional commits need dependency bumps typed
 A `schedule` for Friday 5pm to Sunday 5am: updates land at the start of
 the weekend, leaving time to fix anything that breaks. The base config
 uses it for the weekly minor and patch/pin/digest groups and, through `chain-debounce`,
-for the hk toolchain. Extend it at the top level or inside a `packageRules`
+for the biome toolchain. Extend it at the top level or inside a `packageRules`
 entry:
 
 ```json
@@ -65,9 +65,9 @@ entry:
 ### The Go cluster
 
 `go-tools/go-renovaterc.json` intentionally does **not** extend this
-preset wholesale — it encodes a deliberately more conservative policy for
-the Go cluster. It does reuse the `vulnerability-alerts`
-fragment, since that's identical across both clusters. `spoon-tools/default.json`
+preset wholesale: it keeps its own groups for the Go cluster. It does extend
+`presets/base` and, for `hugoh/**`, `presets/first-party-soak`, so the shared
+policy is identical across both clusters. `spoon-tools/default.json`
 extends this preset directly and layers a `lua` version ceiling on top.
 
 ### `presets/monthly`
@@ -82,7 +82,7 @@ base config uses it.
 Holds a frequently released dependency (one that ships several times a week
 and would otherwise open a PR for each) to the weekend window. It is just
 `presets/weekend` under a name that says why it is used; extend it inside a
-`packageRules` entry. Used for `npm:renovate` and the hk toolchain.
+`packageRules` entry. Used for `npm:renovate` and the biome toolchain.
 
 ### The always-on fragments
 
@@ -124,52 +124,31 @@ spoons, go-tools). A preset cannot carry `match*` options, so extend it from a
 go-tools releases several times a day, so the 7-day third-party soak kept
 restarting and its copier updates never matured; this is the fix.
 
-### `presets/hk-toolchain`
-
-Policy for the `jdx/hk` and `hugoh/hk-config` pins: they move in **one** PR
-(group `hk toolchain`), after a 1-day soak, in the weekend window, so the Pkl
-schema pin, the CLI pin in `mise.toml` and the `base.pkl` they were validated
-against never drift apart.
-
-A preset cannot carry `match*` options (the validator rejects them), so every
-hub that extends `hugoh/hk-config//renovate.json` adds the matcher itself, as
-its **last** `packageRule`:
-
-```json
-{
-  "matchManagers": ["custom.regex"],
-  "matchPackageNames": ["jdx/hk", "hugoh/hk-config"],
-  "extends": ["github>hugoh/renovate-config//presets/hk-toolchain"]
-}
-```
-
-Hubs today: this repo's `default.json` and `go-tools`' `go-renovaterc.json`
-(which does not extend `default.json`, but does extend `presets/base`).
-
-### Rule order matters (and the hk toolchain group)
+### Rule order matters
 
 Renovate applies `packageRules` top to bottom and the last matching rule wins
 for each field. A hub's own rules come after everything pulled in through
-`extends`, so a hub's generic `minor updates` / `patch updates` groups would
-override a `groupName` set by an extended preset. That is why the matcher above
-must be the last rule.
+`extends`, and the generic `minor updates` / `patch updates` groups would
+override the `groupName` of any group rule above them. That is why a
+dependency-specific group must come after them.
 
-Ownership of the hk pins is split on purpose:
-
-- `hugoh/hk-config//renovate.json` only teaches Renovate *how to read* the
-  `jdx/hk` and `hugoh/hk-config` pins (custom managers for `.pkl` and
-  `mise.toml`, and disabling the built-in `mise` manager for `hk`).
-- `presets/hk-toolchain` decides *how they are grouped and when*.
-- Each hub only says *where* the preset applies, with the matcher.
-
-`scripts/check-hk-grouping.mjs` (the `hk-grouping` step in `hk.pkl`) enforces
-this for `default.json`: it resolves the preset from this checkout, runs the
-rules through Renovate's own matcher and fails if the two pins stop sharing the
-`hk toolchain` group, soak and schedule.
-
-The `biome toolchain` group (an inline rule in `default.json`) works the same
-way for biome: the `biome` pin in `mise.toml` and the `$schema` URL in
+The `biome toolchain` group (an inline rule in `default.json`) is such a group:
+the `biome` pin in `mise.toml` and the `$schema` URL in
 `biome.json` are read by different managers, so without a shared group one can
 land a release before the other and biome reports a schema/CLI version
-mismatch. Its matcher is also the last rule in `default.json`, and the same
-script checks it.
+mismatch. Its matcher is the last rule in `default.json`.
+`scripts/check-package-rules.mjs` (the `package-rules` step in `hk.pkl`)
+enforces this: it resolves the presets from this checkout, runs the rules
+through Renovate's own matcher and fails if the biome pins stop sharing the
+group, or if the generic groups, soaks or schedules change.
+
+### The hk pins
+
+`hugoh/hk-config//renovate.json` (through `presets/base`) teaches Renovate how
+to read the `jdx/hk` and `hugoh/hk-config` pins: custom managers for `.pkl`
+and `mise.toml`, and disabling the built-in `mise` manager for `hk`. They are
+not grouped: each lands in the generic groups with its own soak (7 days for
+`jdx/hk`, 1 day for `hugoh/hk-config`). They don't need to move together: a
+consumer can run an hk newer than its hk-config release was built against, and
+an hk-config release that needs a newer hk fails CI through `min_hk_version`
+until the `jdx/hk` bump lands (see hk-config's README).

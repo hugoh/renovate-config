@@ -1,13 +1,12 @@
 #!/usr/bin/env node
-// Regression check for the "hk toolchain" group (see README: "Rule order
-// matters"). Runs default.json's packageRules through Renovate's own rule
-// matcher for synthetic updates and fails if the jdx/hk and hugoh/hk-config
-// pins stop landing in one group — e.g. when a generic "minor updates" /
-// "patch updates" rule gets placed after the hk toolchain rule and replaces
-// its groupName.
+// Regression check for default.json's packageRules (see README: "Rule order
+// matters"). Runs them through Renovate's own rule matcher for synthetic
+// updates and fails if the policy changes: the biome toolchain group (which
+// must stay below the generic "minor updates" / "patch updates" rules, or
+// their groupName replaces it), the generic groups themselves, the
+// first-party / third-party soak, and the schedules.
 //
-// Presets under presets/ that a rule extends (e.g. presets/hk-toolchain, which
-// carries the group name, soak and schedule) are resolved from this checkout,
+// Presets under presets/ that a rule extends are resolved from this checkout,
 // the way Renovate merges them beneath the rule's own settings.
 //
 // Offline and fast: it only evaluates default.json's own rules. The rule
@@ -103,25 +102,18 @@ const update = (
 
 const cases = [
   // [description, update, expected groupName]
+  // The hk pins land in the generic groups: hk-config only needs
+  // hk >= its min_hk_version, which hk enforces itself, so they don't need to
+  // move together (README: "The hk pins").
   [
     "jdx/hk minor",
     update("jdx/hk", "github-releases", "minor"),
-    "hk toolchain",
-  ],
-  [
-    "jdx/hk patch",
-    update("jdx/hk", "github-releases", "patch"),
-    "hk toolchain",
-  ],
-  [
-    "hk-config minor",
-    update("hugoh/hk-config", "github-tags", "minor"),
-    "hk toolchain",
+    "minor updates",
   ],
   [
     "hk-config patch",
     update("hugoh/hk-config", "github-tags", "patch"),
-    "hk toolchain",
+    "patch updates",
   ],
   // biome: the $schema URL (custom.regex) and the mise.toml pin (mise) must
   // land in one group, or the CLI drifts from the schema.
@@ -159,16 +151,10 @@ const cases = [
 ];
 
 let failed = false;
-const ages = new Set();
-const schedules = new Set();
 for (const [name, input, expected] of cases) {
   const out = await applyPackageRules(input);
   const ok = out.groupName === expected;
   if (!ok) failed = true;
-  if (expected === "hk toolchain") {
-    ages.add(out.minimumReleaseAge);
-    schedules.add(JSON.stringify(out.schedule));
-  }
   console.log(
     `${ok ? "ok  " : "FAIL"} ${name}: groupName=${out.groupName} (want ${expected})`,
   );
@@ -178,6 +164,8 @@ for (const [name, input, expected] of cases) {
 const base = resolveExtends(config);
 const soakCases = [
   ["first-party package: 1 day", "hugoh/some-tool", "github-tags", "1 day"],
+  ["hk-config: 1 day", "hugoh/hk-config", "github-tags", "1 day"],
+  ["jdx/hk: 7 days", "jdx/hk", "github-releases", "7 days"],
   ["third-party package: 7 days", "biomejs/biome", "github-releases", "7 days"],
 ];
 for (const [name, packageName, datasource, expected] of soakCases) {
@@ -217,21 +205,9 @@ if (base.timezone !== "America/Chicago") {
 } else {
   console.log("ok   timezone: America/Chicago");
 }
-if (ages.size !== 1 || ages.has(undefined)) {
-  failed = true;
-  console.log(
-    `FAIL hk toolchain members must share one minimumReleaseAge, got: ${[...ages].join(", ")}`,
-  );
-}
-if (schedules.size !== 1 || schedules.has(undefined)) {
-  failed = true;
-  console.log(
-    `FAIL hk toolchain members must share one schedule, got: ${[...schedules].join(", ")}`,
-  );
-}
 if (failed) {
   console.error(
-    "\nThe hk toolchain rule in default.json must stay below the generic minor/patch grouping rules.",
+    "\nThe biome toolchain rule in default.json must stay below the generic minor/patch grouping rules.",
   );
   process.exit(1);
 }
