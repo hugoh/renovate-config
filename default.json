@@ -62,13 +62,7 @@
       "automerge": true
     },
     {
-      "description": "The hk toolchain group (policy in presets/hk-toolchain). Must stay BELOW the generic minor/patch grouping rules above, or their groupName replaces it (later packageRules win); scripts/check-hk-grouping.mjs enforces it. The same matcher is repeated by every other hub that extends hugoh/hk-config//renovate.json (e.g. go-tools' go-renovaterc).",
-      "matchManagers": ["custom.regex"],
-      "matchPackageNames": ["jdx/hk", "hugoh/hk-config"],
-      "extends": ["local>hugoh/renovate-config//presets/hk-toolchain"]
-    },
-    {
-      "description": "The biome toolchain group: the CLI pin in mise.toml and the $schema URL in biome.json (read by customManagers:biomeVersions) are read by different managers, so group them to move in ONE PR and keep the CLI from lagging the schema it validates against (biome warns when they differ). Weekend window via chain-debounce. Like the hk toolchain rule, it must stay BELOW the generic minor/patch grouping rules above.",
+      "description": "The biome toolchain group: the CLI pin in mise.toml and the $schema URL in biome.json (read by customManagers:biomeVersions) are read by different managers, so group them to move in ONE PR and keep the CLI from lagging the schema it validates against (biome warns when they differ). Weekend window via chain-debounce. Must stay BELOW the generic minor/patch grouping rules above, or their groupName replaces it (later packageRules win); scripts/check-package-rules.mjs enforces it.",
       "matchDepNames": ["biome", "biomejs/biome", "@biomejs/biome"],
       "groupName": "biome toolchain",
       "extends": ["local>hugoh/renovate-config//presets/chain-debounce"]
