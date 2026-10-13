@@ -1,0 +1,5 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Saturday before 5am (in the consuming config's timezone): a single short window every week, for dependencies that release several times a day and would otherwise open a PR for each run inside the wider weekend window.",
+  "schedule": ["* 0-4 * * 6"]
+}
