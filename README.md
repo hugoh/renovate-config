@@ -154,9 +154,15 @@ The `linters` group is one of these: the pinned linters in the repo-root
 own `groupName` (a group whose members have different schedules ends up on the
 wrong one) and has to sit below the generic groups and above `biome toolchain`.
 Its tool list is the tools behind hk-config's `base.pkl` steps, plus
-`editorconfig-checker`; biome and `npm:renovate` keep their own groups, and tofu
-and trivy stay weekly. A tool missing from the list just stays on the weekly
-groups.
+`editorconfig-checker`. `base.pkl`'s `stepTools` maps each hk step to the mise
+tool behind it, and `scripts/check-package-rules.mjs` evaluates it from the
+hk-config version pinned in `hk.pkl` (or the `base.pkl` named by
+`HK_CONFIG_BASE_PKL`, to try an unreleased hk-config) and fails when a tool is
+in neither the `linters` rule nor the script's exclusions (biome and
+`npm:renovate` have their own groups, tofu and trivy stay weekly), or when the
+rule lists a tool hk-config no longer runs. Since the check also runs when
+Renovate bumps the hk-config pin, a new linter shows up as a failing PR rather
+than as a tool that quietly stays weekly.
 
 `npm:renovate` has the same problem: `npm-renovate-debounce` extends before the
 generic groups, which then replace its group and schedule, so `default.json`
