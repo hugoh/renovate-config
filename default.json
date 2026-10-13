@@ -97,9 +97,11 @@
       "extends": ["local>hugoh/renovate-config//presets/saturday-early"]
     },
     {
-      "description": "The biome toolchain group: the CLI pin in mise.toml and the $schema URL in biome.json (read by customManagers:biomeVersions) are read by different managers, so group them to move in ONE PR and keep the CLI from lagging the schema it validates against (biome warns when they differ). Weekend window via chain-debounce. Must stay BELOW the generic minor/patch grouping rules above, or their groupName replaces it (later packageRules win); scripts/check-package-rules.mjs enforces it.",
+      "description": "The biome toolchain group: the CLI pin in mise.toml and the $schema URL in biome.json (read by customManagers:biomeVersions) are read by different managers, so group them to move in ONE PR and keep the CLI from lagging the schema it validates against (biome warns when they differ). Both are looked up on npm: the mise manager's own github-tags lookup finds no biome updates (the tags are named @biomejs/biome@<version>), so without the override the CLI pin never moved. Weekend window via chain-debounce. Must stay BELOW the generic minor/patch grouping rules above, or their groupName replaces it (later packageRules win); scripts/check-package-rules.mjs enforces it.",
       "matchDepNames": ["biome", "biomejs/biome", "@biomejs/biome"],
       "groupName": "biome toolchain",
+      "overrideDatasource": "npm",
+      "overridePackageName": "@biomejs/biome",
       "extends": ["local>hugoh/renovate-config//presets/chain-debounce"]
     }
   ]
