@@ -1,6 +1,6 @@
 amends "package://github.com/jdx/hk/releases/download/v2.5.0/hk@2.5.0#/Config.pkl"
 import "package://github.com/jdx/hk/releases/download/v2.5.0/hk@2.5.0#/Builtins.pkl"
-import "package://github.com/hugoh/hk-config/releases/download/v2.1.3/hk-config@2.1.3#/base.pkl" as Base
+import "package://github.com/hugoh/hk-config/releases/download/v2.2.0/hk-config@2.2.0#/base.pkl" as Base
 
 min_hk_version = Base.min_hk_version
 
@@ -13,9 +13,10 @@ local linters = new Mapping<String, Step> {
     // The biome toolchain group must stay below the generic minor/patch
     // grouping rules in default.json (README: "Rule order matters"); this
     // evaluates the rules with Renovate's own matcher and fails if the group,
-    // soak or schedule policy is lost.
+    // soak or schedule policy is lost. It also reads hk-config's stepTools, so
+    // an hk-config bump in hk.pkl re-runs it and fails on an unclassified tool.
     ["package-rules"] {
-        glob = List("default.json", "presets/*.json", "scripts/check-package-rules.mjs")
+        glob = List("default.json", "presets/*.json", "scripts/check-package-rules.mjs", "hk.pkl")
         check = "node scripts/check-package-rules.mjs"
     }
 }

@@ -9,9 +9,14 @@
 // Presets under presets/ that a rule extends are resolved from this checkout,
 // the way Renovate merges them beneath the rule's own settings.
 //
-// Offline and fast: it only evaluates default.json's own rules. The rule
-// order inside default.json is what decides the outcome, because rules that
-// come in through `extends` (hk-config's managers) are applied before them.
+// It also checks that the `linters` rule covers every tool hk-config's
+// `stepTools` (base.pkl) maps a step to, so the two can't drift apart. That
+// reads the hk-config version pinned in hk.pkl through `pkl`; set
+// HK_CONFIG_BASE_PKL to a local base.pkl to check an unreleased hk-config.
+//
+// Everything is local: the rule order inside default.json is what decides the
+// outcome, because rules that come in through `extends` (hk-config's
+// managers) are applied before them.
 //
 // Renovate is located via RENOVATE_DIR, or `mise where npm:renovate` (the
 // mise-installed npm:renovate pinned in mise.toml).
@@ -277,6 +282,53 @@ for (const [name, actual] of [
   console.log(
     `${ok ? "ok  " : "FAIL"} ${name}: monthly-weekend (got ${JSON.stringify(actual)})`,
   );
+}
+// The linters rule lists the tools behind hk-config's steps. Tools that are
+// deliberately not in it must say why; a tool in neither place is a new step
+// nobody classified, and a listed tool hk-config no longer runs is stale.
+const EXCLUDED = {
+  biome: "own group (biome toolchain)",
+  "npm:renovate": "own group (renovate CLI)",
+  tofu: "infrastructure tool, not a linter",
+  trivy: "security scanner, stays on the weekly groups",
+};
+const REPO_LOCAL = new Set(["editorconfig-checker"]);
+
+function stepTools() {
+  const source = process.env.HK_CONFIG_BASE_PKL;
+  const [expression, file] = source
+    ? ["stepTools", resolve(source)]
+    : ["Base.stepTools", join(here, "..", "hk.pkl")];
+  const json = `new JsonRenderer {}.renderValue(${expression})`;
+  try {
+    return JSON.parse(
+      execFileSync("pkl", ["eval", "-x", json, "-f", "plain", file], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      }),
+    );
+  } catch (error) {
+    throw new Error(
+      `cannot read stepTools from ${file}: bump the hk-config pin in hk.pkl to a release that has it, or set HK_CONFIG_BASE_PKL\n${error.stderr ?? error.message}`,
+    );
+  }
+}
+
+const linters = new Set(
+  config.packageRules.find((rule) => rule.groupName === "linters")
+    ?.matchDepNames ?? [],
+);
+const hkTools = new Set(Object.values(stepTools()).filter(Boolean));
+const coverage = [
+  ["unclassified hk-config tools", [...hkTools].filter((t) => !linters.has(t) && !(t in EXCLUDED))],
+  ["linters entries hk-config no longer runs", [...linters].filter((t) => !hkTools.has(t) && !REPO_LOCAL.has(t))],
+  ["excluded tools that are also listed", Object.keys(EXCLUDED).filter((t) => linters.has(t))],
+  ["excluded tools hk-config no longer runs", Object.keys(EXCLUDED).filter((t) => !hkTools.has(t))],
+];
+for (const [name, tools] of coverage) {
+  const ok = tools.length === 0;
+  if (!ok) failed = true;
+  console.log(`${ok ? "ok  " : "FAIL"} ${name}: ${tools.join(", ") || "none"}`);
 }
 if (base.timezone !== "America/Chicago") {
   failed = true;

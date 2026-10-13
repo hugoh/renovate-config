@@ -62,7 +62,7 @@
       "automerge": true
     },
     {
-      "description": "Linters pinned in the repo's own mise.toml move together on the first weekend of the month: a linter release that adds a rule can fail CI, so batching them keeps that to one PR and keeps it from blocking the weekly groups. The list is the tools behind hk-config's base.pkl steps plus editorconfig-checker. biome and npm:renovate keep their own groups below, and tofu/trivy stay weekly. Only the repo-root mise.toml: global tool files and mise.ci.toml keep the weekly groups. Needs its own groupName (a group with mixed schedules falls back to the wrong one) and must stay BELOW the generic minor/patch rules, which would otherwise replace it, and ABOVE biome toolchain.",
+      "description": "Linters pinned in the repo's own mise.toml move together on the first weekend of the month: a linter release that adds a rule can fail CI, so batching them keeps that to one PR and keeps it from blocking the weekly groups. The list is the tools behind hk-config's base.pkl steps (its stepTools, checked by scripts/check-package-rules.mjs, which fails on a tool that is neither listed here nor excluded there) plus editorconfig-checker. biome and npm:renovate keep their own groups below, and tofu/trivy stay weekly. Only the repo-root mise.toml: global tool files and mise.ci.toml keep the weekly groups. Needs its own groupName (a group with mixed schedules falls back to the wrong one) and must stay BELOW the generic minor/patch rules, which would otherwise replace it, and ABOVE biome toolchain.",
       "matchManagers": ["mise"],
       "matchFileNames": ["mise.toml"],
       "matchDepNames": [
