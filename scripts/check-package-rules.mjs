@@ -225,6 +225,22 @@ for (const [name, input, expected] of cases) {
     `${ok ? "ok  " : "FAIL"} ${name}: groupName=${out.groupName} (want ${expected})`,
   );
 }
+// The mise manager looks biome up through github-tags, which finds no updates
+// for it (its tags are named @biomejs/biome@<version>), so the CLI pin never
+// moved while the npm-tracked $schema did. Both must use the npm datasource.
+const overrideCases = [
+  ["biome mise pin: npm datasource", update("biomejs/biome", "github-tags", "patch", "mise", "biome"), { datasource: "npm", packageName: "@biomejs/biome" }],
+  ["biome schema: npm datasource", update("@biomejs/biome", "npm", "patch", "custom.jsonata", "@biomejs/biome", "biome.json"), { datasource: "npm", packageName: "@biomejs/biome" }],
+  ["other mise tool: no override", update("example/other", "github-releases", "patch", "mise", "other"), { datasource: "github-releases", packageName: "example/other" }],
+];
+for (const [name, input, expected] of overrideCases) {
+  const out = await applyPackageRules(input);
+  const ok = Object.entries(expected).every(([key, value]) => out[key] === value);
+  if (!ok) failed = true;
+  console.log(
+    `${ok ? "ok  " : "FAIL"} ${name}: ${out.datasource} ${out.packageName}`,
+  );
+}
 // Soak and timezone come from the shared presets (presets/base and
 // presets/first-party-soak); make sure adopting them kept the policy intact.
 const base = resolveExtends(config);

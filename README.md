@@ -168,7 +168,9 @@ than as a tool that quietly stays weekly.
 generic groups, which then replace its group and schedule, so `default.json`
 repeats it as the `renovate CLI` rule below them.
 
-The `biome toolchain` group (an inline rule in `default.json`) is such a group:
+The `biome toolchain` group (an inline rule in `default.json`) is such a group
+(and it also looks both biome entries up on npm, because the mise manager's own
+`github-tags` lookup finds no biome updates):
 the `biome` pin in `mise.toml` and the `$schema` URL in
 `biome.json` are read by different managers, so without a shared group one can
 land a release before the other and biome reports a schema/CLI version
