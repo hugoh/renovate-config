@@ -22,17 +22,22 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
 
 1. **Extends** Renovate's `config:best-practices` and automerge presets, and
    the presets under `presets/`, chiefly `presets/base` (shared with go-tools'
-   `go-renovaterc`): the timezone, the monthly window, vulnerability alerts and
-   `hugoh/hk-config//renovate.json` (how to *read* the hk pins, see below).
+   `go-renovaterc`): the timezone, the first-weekend monthly window,
+   vulnerability alerts and `hugoh/hk-config//renovate.json` (how to *read* the
+   hk pins, see below).
 2. **Soak and schedule**: a 7-day `minimumReleaseAge` for third parties (from
    `presets/base`), 1 day for `hugoh/**` (`presets/first-party-soak`), and the
-   monthly window for everything not overridden below (major updates).
+   monthly window (`presets/monthly-weekend`) for everything not overridden
+   below (major updates).
 3. **Groups**: all minor updates in one PR (`minor updates`); patch, pin and
    digest updates in another (`patch updates`). Both use the weekend window.
 4. **First-party fast lane**: the reusable workflows and composite actions in
    my own repos propagate within a day and automerge (`first-party
    gh-workflows`).
-5. **`biome toolchain`**: last, so it wins over the generic groups (see below).
+5. **`linters`** and **`renovate CLI`**: below the generic groups so they win
+   over them, with the linters on the monthly window and the renovate CLI on
+   `presets/saturday-early` (see below).
+6. **`biome toolchain`**: last, so it wins over the generic groups (see below).
 
 A consuming repo's own `packageRules` come after all of this, so they can
 override any of it.
@@ -70,26 +75,38 @@ preset wholesale: it keeps its own groups for the Go cluster. It does extend
 policy is identical across both clusters. `spoon-tools/default.json`
 extends this preset directly and layers a `lua` version ceiling on top.
 
-### `presets/monthly`
+### `presets/monthly-weekend`
 
-Replaces `schedule:monthly` and `:maintainLockFilesMonthly`: updates and
-lock file maintenance run all day on the 1st, not just 00:00–03:59, so
-`prHourlyLimit` can't leave branches unprocessed until next month. The
-base config uses it.
+Replaces `schedule:monthly` and `:maintainLockFilesMonthly`: updates and lock
+file maintenance run in the first weekend of the month, Friday 5pm to Sunday
+5am around the first Saturday, instead of 00:00–03:59 on the 1st. The 36-hour
+window leaves `prHourlyLimit` time to work through every branch, and the
+updates land when there is time to fix anything that breaks. The Friday part
+only counts on days 1–6 (a Friday the 7th is the second weekend), and the
+window can be 29 hours when the first Saturday is the 1st. The base config uses
+it, so every hub's major updates and lock file maintenance share it; go-tools'
+`go-renovaterc` uses it for its own majors and monthly dev tool groups.
 
 ### `presets/chain-debounce`
 
 Holds a frequently released dependency (one that ships several times a week
 and would otherwise open a PR for each) to the weekend window. It is just
 `presets/weekend` under a name that says why it is used; extend it inside a
-`packageRules` entry. Used for `npm:renovate` and the biome toolchain.
+`packageRules` entry. Used for the biome toolchain.
+
+### `presets/saturday-early`
+
+Saturday before 5am: one short window a week, for the renovate CLI, which ships
+daily and would otherwise open one PR per run inside the 36-hour weekend window.
 
 ### The always-on fragments
 
 Small presets the config always extends:
 
-- `npm-renovate-debounce` applies `chain-debounce` to the mise-managed
-  `npm:renovate` pin.
+- `npm-renovate-debounce` puts the mise-managed `npm:renovate` pin in its own
+  `renovate CLI` group on `presets/saturday-early`. `default.json` repeats the
+  rule below the generic groups (see "Rule order matters"); go-tools, which
+  doesn't extend `default.json`, gets it through this preset.
 - `node-lts` makes the mise manager treat `node` versions with Node's
   versioning, so only LTS-style bumps are proposed.
 - `jsdelivr-npm` is a regex manager for `cdn.jsdelivr.net/npm/<pkg>@<ver>/`
@@ -103,8 +120,8 @@ Small presets the config always extends:
 
 Policy every hub shares, so it is defined once: the timezone the schedule
 presets are evaluated in (`America/Chicago`), the 7-day third-party
-`minimumReleaseAge`, `presets/monthly`, `presets/vulnerability-alerts`, and
-`hugoh/hk-config//renovate.json` (how to read the hk pins). `default.json` and
+`minimumReleaseAge`, `presets/monthly-weekend`, `presets/vulnerability-alerts`,
+and `hugoh/hk-config//renovate.json` (how to read the hk pins). `default.json` and
 go-tools' `go-renovaterc.json` extend it and add their own ecosystem rules and
 groups on top.
 
@@ -131,6 +148,19 @@ for each field. A hub's own rules come after everything pulled in through
 `extends`, and the generic `minor updates` / `patch updates` groups would
 override the `groupName` of any group rule above them. That is why a
 dependency-specific group must come after them.
+
+The `linters` group is one of these: the pinned linters in the repo-root
+`mise.toml` move monthly, in one PR, on `presets/monthly-weekend`. It needs its
+own `groupName` (a group whose members have different schedules ends up on the
+wrong one) and has to sit below the generic groups and above `biome toolchain`.
+Its tool list is the tools behind hk-config's `base.pkl` steps, plus
+`editorconfig-checker`; biome and `npm:renovate` keep their own groups, and tofu
+and trivy stay weekly. A tool missing from the list just stays on the weekly
+groups.
+
+`npm:renovate` has the same problem: `npm-renovate-debounce` extends before the
+generic groups, which then replace its group and schedule, so `default.json`
+repeats it as the `renovate CLI` rule below them.
 
 The `biome toolchain` group (an inline rule in `default.json`) is such a group:
 the `biome` pin in `mise.toml` and the `$schema` URL in
