@@ -83,7 +83,24 @@ function resolveExtends(rule) {
   return { ...merged, ...own };
 }
 
-const packageRules = config.packageRules.map(resolveExtends);
+// Rules inherited through the presets default.json extends come first in
+// Renovate's chain, so the generic groups below can override them. Mirror that.
+function ownPresetRules(reference) {
+  const match = OWN_PRESET.exec(reference);
+  if (!match) return [];
+  const preset = JSON.parse(
+    readFileSync(join(presetsDir, `${match[1]}.json`), "utf8"),
+  );
+  return [
+    ...(preset.extends ?? []).flatMap(ownPresetRules),
+    ...(preset.packageRules ?? []).map(resolveExtends),
+  ];
+}
+
+const packageRules = [
+  ...(config.extends ?? []).flatMap(ownPresetRules),
+  ...config.packageRules.map(resolveExtends),
+];
 
 const update = (
   packageName,
@@ -91,6 +108,7 @@ const update = (
   updateType,
   manager = "custom.regex",
   depName = packageName,
+  packageFile = "mise.toml",
 ) => ({
   packageRules,
   depName,
@@ -98,6 +116,7 @@ const update = (
   manager,
   datasource,
   updateType,
+  packageFile,
 });
 
 const cases = [
@@ -136,6 +155,48 @@ const cases = [
     "biome mise pin minor",
     update("biomejs/biome", "github-releases", "minor", "mise", "biome"),
     "biome toolchain",
+  ],
+  // Linters in the repo's own mise.toml move in their own monthly group; the
+  // same tools in other files (config's global tools) stay in the weekly ones.
+  ...[
+    ["typos", "github-releases"],
+    ["rumdl", "github-releases"],
+    ["tombi", "github-releases"],
+    ["github:owenlamont/ryl", "github-releases"],
+    ["aqua:Kampfkarren/selene", "github-releases"],
+  ].flatMap(([dep, datasource]) =>
+    ["patch", "minor"].map((updateType) => [
+      `${dep} ${updateType} in mise.toml`,
+      update(dep, datasource, updateType, "mise", dep),
+      "linters",
+    ]),
+  ),
+  [
+    "linter in a global tools file",
+    update(
+      "ruff",
+      "github-releases",
+      "patch",
+      "mise",
+      "ruff",
+      "dotfiles/dot_config/mise/exact_conf.d/10-tools.toml.tmpl",
+    ),
+    "patch updates",
+  ],
+  [
+    "non-linter mise tool",
+    update("uv", "github-releases", "patch", "mise", "uv"),
+    "patch updates",
+  ],
+  [
+    "linter major update stays ungrouped",
+    update("pinact", "github-releases", "major", "mise", "pinact"),
+    undefined,
+  ],
+  [
+    "npm:renovate in its own group",
+    update("renovate", "npm", "patch", "mise", "npm:renovate"),
+    "renovate CLI",
   ],
   // Controls: the generic groups must still apply to everything else.
   [
@@ -184,19 +245,37 @@ for (const [name, packageName, datasource, expected] of soakCases) {
 const weekend = resolveExtends({
   extends: ["local>hugoh/renovate-config//presets/weekend"],
 }).schedule;
+const monthlyWeekend = resolveExtends({
+  extends: ["local>hugoh/renovate-config//presets/monthly-weekend"],
+}).schedule;
+const saturdayEarly = resolveExtends({
+  extends: ["local>hugoh/renovate-config//presets/saturday-early"],
+}).schedule;
 const scheduleCases = [
-  ["minor schedule: weekend", "minor", weekend],
-  ["patch schedule: weekend", "patch", weekend],
-  ["major schedule: monthly fallthrough", "major", undefined],
+  ["minor schedule: weekend", update("example/other", "github-releases", "minor"), weekend],
+  ["patch schedule: weekend", update("example/other", "github-releases", "patch"), weekend],
+  ["major schedule: monthly fallthrough", update("example/other", "github-releases", "major"), undefined],
+  ["linters schedule: first weekend", update("typos", "github-releases", "patch", "mise", "typos"), monthlyWeekend],
+  ["npm:renovate schedule: early Saturday", update("renovate", "npm", "patch", "mise", "npm:renovate"), saturdayEarly],
 ];
-for (const [name, updateType, expected] of scheduleCases) {
-  const out = await applyPackageRules(
-    update("example/other", "github-releases", updateType),
-  );
+for (const [name, input, expected] of scheduleCases) {
+  const out = await applyPackageRules(input);
   const ok = JSON.stringify(out.schedule) === JSON.stringify(expected);
   if (!ok) failed = true;
   console.log(
     `${ok ? "ok  " : "FAIL"} ${name}: schedule=${JSON.stringify(out.schedule)}`,
+  );
+}
+// The monthly window is one preset: top-level updates and lock file
+// maintenance must share it, or majors and lock files land on different days.
+for (const [name, actual] of [
+  ["base schedule", base.schedule],
+  ["lock file maintenance schedule", base.lockFileMaintenance?.schedule],
+]) {
+  const ok = JSON.stringify(actual) === JSON.stringify(monthlyWeekend);
+  if (!ok) failed = true;
+  console.log(
+    `${ok ? "ok  " : "FAIL"} ${name}: monthly-weekend (got ${JSON.stringify(actual)})`,
   );
 }
 if (base.timezone !== "America/Chicago") {

@@ -62,6 +62,41 @@
       "automerge": true
     },
     {
+      "description": "Linters pinned in the repo's own mise.toml move together on the first weekend of the month: a linter release that adds a rule can fail CI, so batching them keeps that to one PR and keeps it from blocking the weekly groups. The list is the tools behind hk-config's base.pkl steps plus editorconfig-checker. biome and npm:renovate keep their own groups below, and tofu/trivy stay weekly. Only the repo-root mise.toml: global tool files and mise.ci.toml keep the weekly groups. Needs its own groupName (a group with mixed schedules falls back to the wrong one) and must stay BELOW the generic minor/patch rules, which would otherwise replace it, and ABOVE biome toolchain.",
+      "matchManagers": ["mise"],
+      "matchFileNames": ["mise.toml"],
+      "matchDepNames": [
+        "actionlint",
+        "aqua:Kampfkarren/selene",
+        "editorconfig-checker",
+        "ghalint",
+        "github:anordal/shellharden",
+        "github:owenlamont/ryl",
+        "gitleaks",
+        "pinact",
+        "ruff",
+        "rumdl",
+        "shellcheck",
+        "shfmt",
+        "stylua",
+        "tflint",
+        "tombi",
+        "ty",
+        "typos",
+        "zizmor"
+      ],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "linters",
+      "extends": ["local>hugoh/renovate-config//presets/monthly-weekend"]
+    },
+    {
+      "description": "The renovate CLI ships several times a day: its own group and the Saturday-early window. presets/npm-renovate-debounce says the same for go-tools, but its rule comes before the generic minor/patch rules above, which replace both group and schedule, so it has to be repeated here (a rule can't extend a preset that holds packageRules).",
+      "matchManagers": ["mise"],
+      "matchDepNames": ["npm:renovate"],
+      "groupName": "renovate CLI",
+      "extends": ["local>hugoh/renovate-config//presets/saturday-early"]
+    },
+    {
       "description": "The biome toolchain group: the CLI pin in mise.toml and the $schema URL in biome.json (read by customManagers:biomeVersions) are read by different managers, so group them to move in ONE PR and keep the CLI from lagging the schema it validates against (biome warns when they differ). Weekend window via chain-debounce. Must stay BELOW the generic minor/patch grouping rules above, or their groupName replaces it (later packageRules win); scripts/check-package-rules.mjs enforces it.",
       "matchDepNames": ["biome", "biomejs/biome", "@biomejs/biome"],
       "groupName": "biome toolchain",

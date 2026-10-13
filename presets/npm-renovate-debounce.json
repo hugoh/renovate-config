@@ -4,7 +4,8 @@
     {
       "matchManagers": ["mise"],
       "matchDepNames": ["npm:renovate"],
-      "extends": ["local>hugoh/renovate-config//presets/chain-debounce"]
+      "groupName": "renovate CLI",
+      "extends": ["local>hugoh/renovate-config//presets/saturday-early"]
     }
   ]
 }

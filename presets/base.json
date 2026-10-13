@@ -5,7 +5,7 @@
   "minimumReleaseAge": "7 days",
   "extends": [
     "github>hugoh/hk-config//renovate.json",
-    "local>hugoh/renovate-config//presets/monthly",
+    "local>hugoh/renovate-config//presets/monthly-weekend",
     "local>hugoh/renovate-config//presets/vulnerability-alerts"
   ]
 }
