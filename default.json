@@ -38,8 +38,14 @@
       "extends": ["local>hugoh/renovate-config//presets/first-party-soak"]
     },
     {
+      "description": "My own packages get their own group instead of the generic \"minor updates\"/\"patch updates\" ones: a group takes its schedule from the generic rule that grouped it, so without this a consumer's hugoh/** schedule override (e.g. daily) is ignored for any update that lands in a generic group. Majors stay ungrouped, as for third-party packages. Must stay BELOW the generic minor/patch rules (their groupName would replace it) and ABOVE the first-party core rule below, whose groupName must win.",
+      "matchPackageNames": ["hugoh/**"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "groupName": "first-party updates"
+    },
+    {
       "description": "First-party reusable workflows and composite actions: a bump only reaches consumers once a new tag is cut, so propagate within a day and automerge. Restricted to the repos that own these workflows/actions. Needs its own groupName so it isn't swallowed into the \"minor updates\"/\"patch updates\" groups above, which would otherwise pull in their monthly/weekly schedules instead of \"at any time\".",
-      "groupName": "first-party gh-workflows",
+      "groupName": "first-party core",
       "matchManagers": ["github-actions"],
       "matchPackageNames": [
         "hugoh/cog-bump",

@@ -31,9 +31,11 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
    below (major updates).
 3. **Groups**: all minor updates in one PR (`minor updates`); patch, pin and
    digest updates in another (`patch updates`). Both use the weekend window.
-4. **First-party fast lane**: the reusable workflows and composite actions in
-   my own repos propagate within a day and automerge (`first-party
-   gh-workflows`).
+4. **First-party**: minor, patch, pin and digest updates of `hugoh/**` get
+   their own group (`first-party updates`) so a consumer can give them a
+   different schedule; the core packages (reusable workflows, composite
+   actions, shared tooling) propagate within a day and automerge (`first-party
+   core`).
 5. **`linters`** and **`renovate CLI`**: below the generic groups so they win
    over them, with the linters on the monthly window and the renovate CLI on
    `presets/saturday-early` (see below).
