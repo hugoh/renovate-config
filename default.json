@@ -44,11 +44,12 @@
       "groupName": "first-party updates"
     },
     {
-      "description": "hk and hk-config move together in the linters PR and its first-weekend window: a release of either can change checks and fail CI, and hk-config needs a minimum hk version. Separate from the linters rule below, which only sees the mise manager in mise.toml, while these pins are read by custom managers (hk.pkl, mise.toml). Skipped in the hk-config repo, where hk is part of the project, not a linter: it stays in the generic groups. hk-config's github-actions usage is the first-party core rule. A consumer overriding the schedule of hugoh/** must exclude hugoh/hk-config, or the group gets mixed schedules.",
+      "description": "hk and hk-config move together in the linters PR and its first-weekend window: a release of either can change checks and fail CI, and hk-config needs a minimum hk version. Separate from the linters rule below, which only sees the mise manager in mise.toml, while these pins are read by custom managers (hk.pkl, mise.toml). Skipped in the hk-config repo, where hk is part of the project, not a linter: it stays in the generic groups. Both get the 7-day soak: updates join the branch as each matures, so a shorter hk-config soak could land it without the hk it needs. A consumer overriding the schedule of hugoh/** must exclude hugoh/hk-config, or the group gets mixed schedules.",
       "matchPackageNames": ["jdx/hk", "hugoh/hk-config"],
       "matchManagers": ["custom.regex"],
       "matchUpdateTypes": ["minor", "patch"],
       "matchRepositories": ["!hugoh/hk-config"],
+      "minimumReleaseAge": "7 days",
       "groupName": "linters",
       "extends": ["local>hugoh/renovate-config//presets/monthly-weekend"]
     },
@@ -60,7 +61,6 @@
         "hugoh/cog-bump",
         "hugoh/gh-workflows",
         "hugoh/go-tools",
-        "hugoh/hk-config",
         "hugoh/renovate-config",
         "hugoh/spoon-tools"
       ],
@@ -68,7 +68,6 @@
         "hugoh/cog-bump",
         "hugoh/gh-workflows",
         "hugoh/go-tools",
-        "hugoh/hk-config",
         "hugoh/renovate-config",
         "hugoh/spoon-tools"
       ],
