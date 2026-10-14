@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": [
-    "hugoh/hk-config//renovate.json is extended (through presets/base) so every consumer gets its custom managers (the hugoh/hk-config and jdx/hk pins in *.pkl / mise.toml) and its global disable of the built-in mise manager for `hk`. Repos with no hk.pkl are unaffected — those managers just match nothing. Since ~every repo uses hk.pkl, this is injected in the base rather than opted into per repo. The timezone, 7-day soak, monthly window and vulnerability alerts also come from presets/base."
+    "hugoh/hk-config//renovate.json is extended through presets/base, so every consumer gets its custom managers (the hugoh/hk-config and jdx/hk pins in *.pkl / mise.toml) and the built-in mise manager is disabled for `hk`. Repos without hk.pkl are unaffected: the managers match nothing. The timezone, 7-day soak, monthly window and vulnerability alerts also come from presets/base."
   ],
   "extends": [
     ":automergeLinters",
@@ -17,7 +17,7 @@
   ],
   "packageRules": [
     {
-      "description": "config:best-practices pulls in security:minimumReleaseAgeNpm, whose packageRule lowers npm to 3 days and would otherwise override the top-level 7 days.",
+      "description": "config:best-practices pulls in security:minimumReleaseAgeNpm, whose rule lowers npm to 3 days and would override the top-level 7 days.",
       "matchDatasources": ["npm"],
       "matchUpdateTypes": ["major", "minor", "patch"],
       "minimumReleaseAge": "7 days"
@@ -33,13 +33,28 @@
       "extends": ["local>hugoh/renovate-config//presets/weekend"]
     },
     {
-      "description": "My own packages (actions, reusable workflows, spoons, ...) don't need the 7-day soak meant for third-party supply-chain risk: 1 day is enough to catch a bad release. Must stay above the first-party gh-workflows rule below so its 12-hour override still wins in the repos it covers.",
+      "description": "My own packages (actions, reusable workflows, spoons, ...) skip the 7-day third-party soak, which guards against supply-chain risk: 1 day catches a bad release. Must stay above the first-party core rule below so its 12-hour soak still wins.",
       "matchPackageNames": ["hugoh/**"],
       "extends": ["local>hugoh/renovate-config//presets/first-party-soak"]
     },
     {
-      "description": "First-party reusable workflows and composite actions: a bump only reaches consumers once a new tag is cut, so propagate within a day and automerge. Restricted to the repos that own these workflows/actions. Needs its own groupName so it isn't swallowed into the \"minor updates\"/\"patch updates\" groups above, which would otherwise pull in their monthly/weekly schedules instead of \"at any time\".",
-      "groupName": "first-party gh-workflows",
+      "description": "Own group for minor/patch/pin/digest updates of my packages. A group is one branch with one schedule, so a consumer's hugoh/** schedule override (e.g. daily) needs a group of its own, not the generic ones, which would end up with mixed schedules. Majors stay ungrouped. Must stay below the generic minor/patch rules (their groupName would replace it) and above the hk and first-party core rules below, whose groupName must win.",
+      "matchPackageNames": ["hugoh/**"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "groupName": "first-party updates"
+    },
+    {
+      "description": "hk and hk-config move together in the linters PR and its first-weekend window: a release of either can change checks and fail CI, and hk-config needs a minimum hk version. Separate from the linters rule below, which only sees the mise manager in mise.toml, while these pins are read by custom managers (hk.pkl, mise.toml). Skipped in the hk-config repo, where hk is part of the project, not a linter: it stays in the generic groups. hk-config's github-actions usage is the first-party core rule. A consumer overriding the schedule of hugoh/** must exclude hugoh/hk-config, or the group gets mixed schedules.",
+      "matchPackageNames": ["jdx/hk", "hugoh/hk-config"],
+      "matchManagers": ["custom.regex"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchRepositories": ["!hugoh/hk-config"],
+      "groupName": "linters",
+      "extends": ["local>hugoh/renovate-config//presets/monthly-weekend"]
+    },
+    {
+      "description": "First-party reusable workflows and composite actions: a bump only reaches consumers once a new tag is cut, so propagate within a day and automerge. Only in the repos that own them. Own groupName so the generic minor/patch groups don't impose their weekend schedule instead of \"at any time\".",
+      "groupName": "first-party core",
       "matchManagers": ["github-actions"],
       "matchPackageNames": [
         "hugoh/cog-bump",
@@ -62,7 +77,7 @@
       "automerge": true
     },
     {
-      "description": "Linters pinned in the repo's own mise.toml move together on the first weekend of the month: a linter release that adds a rule can fail CI, so batching them keeps that to one PR and keeps it from blocking the weekly groups. The list is the tools behind hk-config's base.pkl steps (its stepTools, checked by scripts/check-package-rules.mjs, which fails on a tool that is neither listed here nor excluded there) plus editorconfig-checker. biome and npm:renovate keep their own groups below, and tofu/trivy stay weekly. Only the repo-root mise.toml: global tool files and mise.ci.toml keep the weekly groups. Needs its own groupName (a group with mixed schedules falls back to the wrong one) and must stay BELOW the generic minor/patch rules, which would otherwise replace it, and ABOVE biome toolchain.",
+      "description": "Linters pinned in the repo-root mise.toml move together on the first weekend of the month: a release that adds a rule can fail CI, so one PR keeps that contained and off the weekly groups. The list is the tools behind hk-config's base.pkl steps (stepTools; scripts/check-package-rules.mjs fails on a tool neither listed here nor excluded there) plus editorconfig-checker. biome and npm:renovate have their own groups below; tofu and trivy stay weekly; global tool files and mise.ci.toml keep the weekly groups. Own groupName (a group with mixed schedules gets the wrong one); must stay below the generic minor/patch rules and above biome toolchain.",
       "matchManagers": ["mise"],
       "matchFileNames": ["mise.toml"],
       "matchDepNames": [
@@ -90,14 +105,14 @@
       "extends": ["local>hugoh/renovate-config//presets/monthly-weekend"]
     },
     {
-      "description": "The renovate CLI ships several times a day: its own group and the Saturday-early window. presets/npm-renovate-debounce says the same for go-tools, but its rule comes before the generic minor/patch rules above, which replace both group and schedule, so it has to be repeated here (a rule can't extend a preset that holds packageRules).",
+      "description": "The renovate CLI ships several times a day: own group, Saturday-early window. presets/npm-renovate-debounce does the same for go-tools, but its rule comes before the generic minor/patch rules, which replace its group and schedule, so repeat it here (a rule can't extend a preset that holds packageRules).",
       "matchManagers": ["mise"],
       "matchDepNames": ["npm:renovate"],
       "groupName": "renovate CLI",
       "extends": ["local>hugoh/renovate-config//presets/saturday-early"]
     },
     {
-      "description": "The biome toolchain group: the CLI pin in mise.toml and the $schema URL in biome.json (read by customManagers:biomeVersions) are read by different managers, so group them to move in ONE PR and keep the CLI from lagging the schema it validates against (biome warns when they differ). Both are looked up on npm: the mise manager's own github-tags lookup finds no biome updates (the tags are named @biomejs/biome@<version>), so without the override the CLI pin never moved. First-weekend-of-the-month window like the linters: biome is a linter and formatter, and a release that adds a rule or changes the formatting can fail CI. Must stay BELOW the generic minor/patch grouping rules above, or their groupName replaces it (later packageRules win); scripts/check-package-rules.mjs enforces it.",
+      "description": "The biome CLI pin (mise.toml) and the $schema URL (biome.json, read by customManagers:biomeVersions) come from different managers; one group moves them in one PR so the CLI doesn't lag the schema (biome warns on a mismatch). Both look up on npm: the mise manager's github-tags lookup finds nothing, since the tags are named @biomejs/biome@<version>. First-weekend window like the linters: a release can add a rule or change formatting and fail CI. Must stay below the generic minor/patch rules, or their groupName replaces it (later rules win); scripts/check-package-rules.mjs enforces it.",
       "matchDepNames": ["biome", "biomejs/biome", "@biomejs/biome"],
       "groupName": "biome toolchain",
       "overrideDatasource": "npm",

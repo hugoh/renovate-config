@@ -122,22 +122,42 @@ const update = (
   datasource,
   updateType,
   packageFile,
+  repository: "example/consumer",
 });
 
 const cases = [
   // [description, update, expected groupName]
-  // The hk pins land in the generic groups: hk-config only needs
-  // hk >= its min_hk_version, which hk enforces itself, so they don't need to
-  // move together (README: "The hk pins").
+  // jdx/hk and hk-config join the linters group, except jdx/hk in the
+  // hk-config repo, where it is part of the project (README: "The hk pins").
   [
     "jdx/hk minor",
     update("jdx/hk", "github-releases", "minor"),
-    "minor updates",
+    "linters",
   ],
   [
     "hk-config patch",
     update("hugoh/hk-config", "github-tags", "patch"),
-    "patch updates",
+    "linters",
+  ],
+  [
+    "hk-config minor",
+    update("hugoh/hk-config", "github-tags", "minor"),
+    "linters",
+  ],
+  [
+    "jdx/hk in the hk-config repo is not a linter",
+    { ...update("jdx/hk", "github-releases", "minor"), repository: "hugoh/hk-config" },
+    "minor updates",
+  ],
+  [
+    "jdx/hk in another repo",
+    { ...update("jdx/hk", "github-releases", "minor"), repository: "hugoh/config" },
+    "linters",
+  ],
+  [
+    "hk-config major stays ungrouped",
+    update("hugoh/hk-config", "github-tags", "major"),
+    undefined,
   ],
   // biome: the $schema URL (custom.regex) and the mise.toml pin (mise) must
   // land in one group, or the CLI drifts from the schema.
@@ -202,6 +222,53 @@ const cases = [
     "npm:renovate in its own group",
     update("renovate", "npm", "patch", "mise", "npm:renovate"),
     "renovate CLI",
+  ],
+  // First-party packages get their own group, except the core ones (own
+  // group, automerge) and majors (ungrouped, like third-party ones).
+  [
+    "first-party minor",
+    update("hugoh/TeamsControl.spoon", "github-releases", "minor"),
+    "first-party updates",
+  ],
+  [
+    "first-party patch",
+    update("hugoh/TeamsControl.spoon", "github-releases", "patch"),
+    "first-party updates",
+  ],
+  [
+    "first-party major stays ungrouped",
+    update("hugoh/TeamsControl.spoon", "github-releases", "major"),
+    undefined,
+  ],
+  [
+    "first-party core in an owning repo",
+    {
+      ...update(
+        "hugoh/gh-workflows",
+        "github-tags",
+        "minor",
+        "github-actions",
+        "hugoh/gh-workflows",
+        ".github/workflows/hk.yml",
+      ),
+      repository: "hugoh/go-tools",
+    },
+    "first-party core",
+  ],
+  [
+    "first-party core package in a consumer repo",
+    {
+      ...update(
+        "hugoh/gh-workflows",
+        "github-tags",
+        "minor",
+        "github-actions",
+        "hugoh/gh-workflows",
+        ".github/workflows/hk.yml",
+      ),
+      repository: "hugoh/config",
+    },
+    "first-party updates",
   ],
   // Controls: the generic groups must still apply to everything else.
   [
@@ -282,6 +349,9 @@ const scheduleCases = [
   // they must share its window. Majors are included, they don't fall through.
   ["biome mise pin schedule: first weekend", update("@biomejs/biome", "npm", "patch", "mise", "biome", "mise.toml"), monthlyWeekend],
   ["biome mise pin minor schedule: first weekend", update("@biomejs/biome", "npm", "minor", "mise", "biome", "mise.toml"), monthlyWeekend],
+  ["jdx/hk schedule: first weekend", update("jdx/hk", "github-releases", "minor"), monthlyWeekend],
+  ["hk-config patch schedule: first weekend", update("hugoh/hk-config", "github-tags", "patch"), monthlyWeekend],
+  ["hk-config minor schedule: first weekend", update("hugoh/hk-config", "github-tags", "minor"), monthlyWeekend],
   ["biome schema schedule: first weekend", update("@biomejs/biome", "npm", "minor", "custom.jsonata", "@biomejs/biome", "biome.json"), monthlyWeekend],
   ["biome major schedule: first weekend", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), monthlyWeekend],
 ];
@@ -292,6 +362,37 @@ for (const [name, input, expected] of scheduleCases) {
   console.log(
     `${ok ? "ok  " : "FAIL"} ${name}: schedule=${JSON.stringify(out.schedule)}`,
   );
+}
+// hk and hk-config must be bumped together: for every update type and file
+// they land in the same group with the same schedule, in any repo but
+// hk-config's own (where hk is part of the project, not a linter). A group
+// with mixed schedules gets whichever one Renovate meets first, so a split
+// here would silently un-bundle them. A consumer overriding the schedule of
+// hugoh/** must leave hk-config out ("!hugoh/hk-config"), or it splits them.
+for (const repository of ["example/consumer", "hugoh/config", "hugoh/go-tools"]) {
+  for (const updateType of ["minor", "patch"]) {
+    for (const packageFile of ["hk.pkl", "mise.toml"]) {
+      const [hk, hkConfig] = await Promise.all(
+        [
+          ["jdx/hk", "github-releases"],
+          ["hugoh/hk-config", "github-tags"],
+        ].map(([name, datasource]) =>
+          applyPackageRules({
+            ...update(name, datasource, updateType, "custom.regex", name, packageFile),
+            repository,
+          }),
+        ),
+      );
+      const ok =
+        hk.groupName !== undefined &&
+        hk.groupName === hkConfig.groupName &&
+        JSON.stringify(hk.schedule) === JSON.stringify(hkConfig.schedule);
+      if (!ok) failed = true;
+      console.log(
+        `${ok ? "ok  " : "FAIL"} hk + hk-config bundled: ${repository} ${updateType} ${packageFile}: ${hk.groupName} / ${hkConfig.groupName}`,
+      );
+    }
+  }
 }
 // The monthly window is one preset: top-level updates and lock file
 // maintenance must share it, or majors and lock files land on different days.
@@ -337,8 +438,10 @@ function stepTools() {
 }
 
 const linters = new Set(
-  config.packageRules.find((rule) => rule.groupName === "linters")
-    ?.matchDepNames ?? [],
+  // Not just the first "linters" rule: the hk/hk-config rule shares the name.
+  config.packageRules.find(
+    (rule) => rule.groupName === "linters" && rule.matchDepNames,
+  )?.matchDepNames ?? [],
 );
 const hkTools = new Set(Object.values(stepTools()).filter(Boolean));
 const coverage = [
@@ -351,6 +454,24 @@ for (const [name, tools] of coverage) {
   const ok = tools.length === 0;
   if (!ok) failed = true;
   console.log(`${ok ? "ok  " : "FAIL"} ${name}: ${tools.join(", ") || "none"}`);
+}
+// The first-party core rule only applies where a repo owns the package it
+// consumes, so matchPackageNames and matchRepositories must list the same
+// repos; otherwise a package is either never fast-laned or fast-laned from a
+// repo that doesn't own it.
+const core = config.packageRules.find(
+  (rule) => rule.groupName === "first-party core",
+);
+const coreNames = [...(core?.matchPackageNames ?? [])].sort();
+const coreRepos = [...(core?.matchRepositories ?? [])].sort();
+{
+  const ok =
+    coreNames.length > 0 &&
+    JSON.stringify(coreNames) === JSON.stringify(coreRepos);
+  if (!ok) failed = true;
+  console.log(
+    `${ok ? "ok  " : "FAIL"} first-party core: matchPackageNames == matchRepositories (names: ${coreNames.join(", ")}; repos: ${coreRepos.join(", ")})`,
+  );
 }
 if (base.timezone !== "America/Chicago") {
   failed = true;

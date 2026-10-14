@@ -31,9 +31,12 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
    below (major updates).
 3. **Groups**: all minor updates in one PR (`minor updates`); patch, pin and
    digest updates in another (`patch updates`). Both use the weekend window.
-4. **First-party fast lane**: the reusable workflows and composite actions in
-   my own repos propagate within a day and automerge (`first-party
-   gh-workflows`).
+4. **First-party**: minor, patch, pin and digest updates of `hugoh/**` get
+   their own group (`first-party updates`) so a consumer can give them a
+   different schedule; the core packages (reusable workflows, composite
+   actions, shared tooling) propagate within a day and automerge (`first-party
+   core`). The exception is the `hugoh/hk-config` pin (`linters`, monthly, see
+   "The hk pins").
 5. **`linters`** and **`renovate CLI`**: below the generic groups so they win
    over them, with the linters on the monthly window and the renovate CLI on
    `presets/saturday-early` (see below).
@@ -192,8 +195,9 @@ group or window, or if the generic groups, soaks or schedules change.
 `hugoh/hk-config//renovate.json` (through `presets/base`) teaches Renovate how
 to read the `jdx/hk` and `hugoh/hk-config` pins: custom managers for `.pkl`
 and `mise.toml`, and disabling the built-in `mise` manager for `hk`. They are
-not grouped: each lands in the generic groups with its own soak (7 days for
-`jdx/hk`, 1 day for `hugoh/hk-config`). They don't need to move together: a
-consumer can run an hk newer than its hk-config release was built against, and
-an hk-config release that needs a newer hk fails CI through `min_hk_version`
-until the `jdx/hk` bump lands (see hk-config's README).
+moved in one go: `jdx/hk` (7-day soak) and `hugoh/hk-config` (1-day soak) both
+join the `linters` group and its first-weekend window, since a release of
+either can fail CI like a linter release and hk-config needs a minimum hk
+(`min_hk_version`; see hk-config's README). Not in the hk-config repo itself,
+where hk is part of the project rather than a tool it lints with: there
+`jdx/hk` stays in the generic groups.
