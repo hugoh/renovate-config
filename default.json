@@ -44,11 +44,19 @@
       "groupName": "first-party updates"
     },
     {
-      "description": "hk-config defines which linters hk runs and how, so a bump can fail CI the way a linter release can, and it needs a minimum hk version: it moves in its own group in the linters' first-weekend window, after the weekly jdx/hk bump. Only the pin read by the custom managers (*.pkl, mise.toml); the github-actions manager's hk-config usage is the first-party core rule below. Overrides the first-party updates group above; a consumer's hugoh/** schedule override must not pull it back to daily.",
+      "description": "hk-config defines which linters hk runs and how, so a bump can fail CI the way a linter release can, and it needs a minimum hk version: it moves in its own group in the linters' first-weekend window, alongside the jdx/hk bump (linters group). Only the pin read by the custom managers (*.pkl, mise.toml); the github-actions manager's hk-config usage is the first-party core rule below. Overrides the first-party updates group above; a consumer's hugoh/** schedule override must not pull it back to daily.",
       "matchPackageNames": ["hugoh/hk-config"],
       "matchManagers": ["custom.regex"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "hk-config",
+      "extends": ["local>hugoh/renovate-config//presets/monthly-weekend"]
+    },
+    {
+      "description": "hk itself is a linter runner: a new release can add or change checks and fail CI, so it joins the linters group and its first-weekend window. The pin is read by custom managers (hk.pkl, mise.toml) and the built-in mise manager is disabled for hk, so the linters rule above, which is limited to the mise manager and mise.toml, never sees it. Same groupName so it lands in the one linters PR.",
+      "matchPackageNames": ["jdx/hk"],
+      "matchManagers": ["custom.regex"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "linters",
       "extends": ["local>hugoh/renovate-config//presets/monthly-weekend"]
     },
     {
