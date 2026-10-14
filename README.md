@@ -161,15 +161,6 @@ window can be 29 hours when the first Saturday is the 1st. The base config uses
 it, so every hub's major updates and lock file maintenance share it; go-tools'
 `go-renovaterc` uses it for its own majors and monthly dev tool groups.
 
-### `presets/chain-debounce`
-
-Holds a frequently released dependency (one that ships several times a week
-and would otherwise open a PR for each) to the weekend window. It is just
-`presets/weekend` under a name that says why it is used; extend it inside a
-`packageRules` entry. Not used in this repo's own rules any more (the biome
-toolchain moved to `presets/monthly-weekend`, `npm:renovate` to
-`presets/saturday-early`); go-tools' Copier update rule still uses it.
-
 ### `presets/saturday-early`
 
 Saturday before 5am: one short window a week, for the renovate CLI, which ships

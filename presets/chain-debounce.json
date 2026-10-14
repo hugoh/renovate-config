@@ -1,5 +1,0 @@
-{
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Hold frequently released deps to the same weekend window as the weekly patch group, instead of adding a separate update window.",
-  "extends": ["local>hugoh/renovate-config//presets/weekend"]
-}
