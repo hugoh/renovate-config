@@ -438,8 +438,10 @@ function stepTools() {
 }
 
 const linters = new Set(
-  config.packageRules.find((rule) => rule.groupName === "linters")
-    ?.matchDepNames ?? [],
+  // Not just the first "linters" rule: the hk/hk-config rule shares the name.
+  config.packageRules.find(
+    (rule) => rule.groupName === "linters" && rule.matchDepNames,
+  )?.matchDepNames ?? [],
 );
 const hkTools = new Set(Object.values(stepTools()).filter(Boolean));
 const coverage = [
