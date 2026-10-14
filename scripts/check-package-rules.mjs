@@ -126,10 +126,8 @@ const update = (
 
 const cases = [
   // [description, update, expected groupName]
-  // The hk pins land in the generic groups (hk-config, being first-party, in
-  // its own group): hk-config only needs
-  // hk >= its min_hk_version, which hk enforces itself, so they don't need to
-  // move together (README: "The hk pins").
+  // jdx/hk lands in the generic groups; hk-config has its own monthly group,
+  // so it arrives after the hk it needs (README: "The hk pins").
   [
     "jdx/hk minor",
     update("jdx/hk", "github-releases", "minor"),
@@ -138,7 +136,17 @@ const cases = [
   [
     "hk-config patch",
     update("hugoh/hk-config", "github-tags", "patch"),
-    "first-party updates",
+    "hk-config",
+  ],
+  [
+    "hk-config minor",
+    update("hugoh/hk-config", "github-tags", "minor"),
+    "hk-config",
+  ],
+  [
+    "hk-config major stays ungrouped",
+    update("hugoh/hk-config", "github-tags", "major"),
+    undefined,
   ],
   // biome: the $schema URL (custom.regex) and the mise.toml pin (mise) must
   // land in one group, or the CLI drifts from the schema.
@@ -330,6 +338,8 @@ const scheduleCases = [
   // they must share its window. Majors are included, they don't fall through.
   ["biome mise pin schedule: first weekend", update("@biomejs/biome", "npm", "patch", "mise", "biome", "mise.toml"), monthlyWeekend],
   ["biome mise pin minor schedule: first weekend", update("@biomejs/biome", "npm", "minor", "mise", "biome", "mise.toml"), monthlyWeekend],
+  ["hk-config patch schedule: first weekend", update("hugoh/hk-config", "github-tags", "patch"), monthlyWeekend],
+  ["hk-config minor schedule: first weekend", update("hugoh/hk-config", "github-tags", "minor"), monthlyWeekend],
   ["biome schema schedule: first weekend", update("@biomejs/biome", "npm", "minor", "custom.jsonata", "@biomejs/biome", "biome.json"), monthlyWeekend],
   ["biome major schedule: first weekend", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), monthlyWeekend],
 ];

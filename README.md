@@ -35,7 +35,8 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
    their own group (`first-party updates`) so a consumer can give them a
    different schedule; the core packages (reusable workflows, composite
    actions, shared tooling) propagate within a day and automerge (`first-party
-   core`).
+   core`). The exception is the `hugoh/hk-config` pin (`hk-config`, monthly,
+   see "The hk pins").
 5. **`linters`** and **`renovate CLI`**: below the generic groups so they win
    over them, with the linters on the monthly window and the renovate CLI on
    `presets/saturday-early` (see below).
@@ -194,8 +195,9 @@ group or window, or if the generic groups, soaks or schedules change.
 `hugoh/hk-config//renovate.json` (through `presets/base`) teaches Renovate how
 to read the `jdx/hk` and `hugoh/hk-config` pins: custom managers for `.pkl`
 and `mise.toml`, and disabling the built-in `mise` manager for `hk`. They are
-not grouped: each lands in the generic groups with its own soak (7 days for
-`jdx/hk`, 1 day for `hugoh/hk-config`). They don't need to move together: a
-consumer can run an hk newer than its hk-config release was built against, and
-an hk-config release that needs a newer hk fails CI through `min_hk_version`
-until the `jdx/hk` bump lands (see hk-config's README).
+not bundled: `jdx/hk` lands in the generic weekly groups (7-day soak), while
+`hugoh/hk-config` (1-day soak) has its own `hk-config` group in the linters'
+first-weekend window, because it defines the linters hk runs and a bump can
+fail CI like a linter release. That also orders them: a new hk arrives on the
+weekend, hk-config follows, so an hk-config release that needs a newer hk
+rarely fails CI through `min_hk_version` (see hk-config's README).
