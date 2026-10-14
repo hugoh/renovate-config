@@ -363,6 +363,37 @@ for (const [name, input, expected] of scheduleCases) {
     `${ok ? "ok  " : "FAIL"} ${name}: schedule=${JSON.stringify(out.schedule)}`,
   );
 }
+// hk and hk-config must be bumped together: for every update type and file
+// they land in the same group with the same schedule, in any repo but
+// hk-config's own (where hk is part of the project, not a linter). A group
+// with mixed schedules gets whichever one Renovate meets first, so a split
+// here would silently un-bundle them. A consumer overriding the schedule of
+// hugoh/** must leave hk-config out ("!hugoh/hk-config"), or it splits them.
+for (const repository of ["example/consumer", "hugoh/config", "hugoh/go-tools"]) {
+  for (const updateType of ["minor", "patch"]) {
+    for (const packageFile of ["hk.pkl", "mise.toml"]) {
+      const [hk, hkConfig] = await Promise.all(
+        [
+          ["jdx/hk", "github-releases"],
+          ["hugoh/hk-config", "github-tags"],
+        ].map(([name, datasource]) =>
+          applyPackageRules({
+            ...update(name, datasource, updateType, "custom.regex", name, packageFile),
+            repository,
+          }),
+        ),
+      );
+      const ok =
+        hk.groupName !== undefined &&
+        hk.groupName === hkConfig.groupName &&
+        JSON.stringify(hk.schedule) === JSON.stringify(hkConfig.schedule);
+      if (!ok) failed = true;
+      console.log(
+        `${ok ? "ok  " : "FAIL"} hk + hk-config bundled: ${repository} ${updateType} ${packageFile}: ${hk.groupName} / ${hkConfig.groupName}`,
+      );
+    }
+  }
+}
 // The monthly window is one preset: top-level updates and lock file
 // maintenance must share it, or majors and lock files land on different days.
 for (const [name, actual] of [
