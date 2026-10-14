@@ -1,17 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": [
-    "hugoh/hk-config//renovate.json is extended through presets/base, so every consumer gets its custom managers (the hugoh/hk-config and jdx/hk pins in *.pkl / mise.toml) and the built-in mise manager is disabled for `hk`. Repos without hk.pkl are unaffected: the managers match nothing. The timezone, 7-day soak, monthly window and vulnerability alerts also come from presets/base."
+    "hugoh/hk-config//renovate.json is extended through presets/base, so every consumer gets its custom managers (the hugoh/hk-config and jdx/hk pins in *.pkl / mise.toml) and the built-in mise manager is disabled for `hk`. Repos without hk.pkl are unaffected: the managers match nothing. The timezone, soaks (7 days third-party, 1 day hugoh/**), monthly window, vulnerability alerts and automerge presets also come from presets/base."
   ],
   "extends": [
-    ":automergeLinters",
-    ":automergeMinor",
-    ":automergeDigest",
     "config:best-practices",
     "customManagers:biomeVersions",
     ":preserveSemverRanges",
     "local>hugoh/renovate-config//presets/base",
-    "local>hugoh/renovate-config//presets/npm-renovate-debounce",
     "local>hugoh/renovate-config//presets/node-lts",
     "local>hugoh/renovate-config//presets/jsdelivr-npm"
   ],
@@ -31,11 +27,6 @@
       "matchUpdateTypes": ["patch", "pin", "digest"],
       "groupName": "patch updates",
       "extends": ["local>hugoh/renovate-config//presets/weekend"]
-    },
-    {
-      "description": "My own packages (actions, reusable workflows, spoons, ...) skip the 7-day third-party soak, which guards against supply-chain risk: 1 day catches a bad release. Must stay above the first-party core rule below so its 12-hour soak still wins.",
-      "matchPackageNames": ["hugoh/**"],
-      "extends": ["local>hugoh/renovate-config//presets/first-party-soak"]
     },
     {
       "description": "Own group for minor/patch/pin/digest updates of my packages. A group is one branch with one schedule, so a consumer's hugoh/** schedule override (e.g. daily) needs a group of its own, not the generic ones, which would end up with mixed schedules. Majors stay ungrouped. Must stay below the generic minor/patch rules (their groupName would replace it) and above the hk and first-party core rules below, whose groupName must win.",
@@ -84,7 +75,7 @@
         "aqua:Kampfkarren/selene",
         "editorconfig-checker",
         "ghalint",
-        "github:anordal/shellharden",
+        "aqua:anordal/shellharden",
         "github:owenlamont/ryl",
         "gitleaks",
         "pinact",
@@ -104,7 +95,7 @@
       "extends": ["local>hugoh/renovate-config//presets/monthly-weekend"]
     },
     {
-      "description": "The renovate CLI ships several times a day: own group, Saturday-early window. presets/npm-renovate-debounce does the same for go-tools, but its rule comes before the generic minor/patch rules, which replace its group and schedule, so repeat it here (a rule can't extend a preset that holds packageRules).",
+      "description": "The renovate CLI ships several times a day: own group, Saturday-early window. presets/npm-renovate-debounce holds the same rule for go-tools; here it has to sit below the generic minor/patch rules, which would replace its group and schedule (a rule can't extend a preset that holds packageRules).",
       "matchManagers": ["mise"],
       "matchDepNames": ["npm:renovate"],
       "groupName": "renovate CLI",

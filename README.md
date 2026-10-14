@@ -16,19 +16,91 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
 `github>hugoh/renovate-config` first in their `extends` array and add their own
 `packageRules` afterward.
 
+## How it all fits together
+
+Every repo extends one of three hubs, and all three sit on `presets/base`:
+
+```mermaid
+flowchart TD
+  hkc["hugoh/hk-config//renovate.json<br/>(how to read the hk pins)"] --> base
+  base["presets/base<br/>timezone · soak · monthly window · vuln alerts"]
+  base --> default["default.json<br/>github>hugoh/renovate-config"]
+  base --> go["go-tools: go-renovaterc.json"]
+  default --> plain["most repos"]
+  default --> spoon["spoon-tools: default.json<br/>lua ceiling · hs-mock pin"]
+  spoon --> spoons["*.spoon, hs-mock"]
+  go --> gotools["go-tools (own .renovaterc.json)"]
+  go --> gorepos["Go repos (Copier-generated .renovaterc.json)"]
+```
+
+- **`github>hugoh/renovate-config`** (`default.json`): every repo that isn't a
+  spoon or a Go project, plus `spoon-tools` itself. Releasing repos add
+  `presets/action-repo` (`gh-workflows`) or `presets/action-file` (`cog-bump`,
+  `digest-action`, `rerun-transient-failures`, `checkly-config`).
+- **`github>hugoh/spoon-tools`**: the Hammerspoon spoons and `hs-mock`. It is
+  `default.json` plus a `lua` ceiling and a regex manager for the
+  `HS_MOCK_VERSION` pin in `mise.toml`.
+- **`github>hugoh/go-tools:go-renovaterc`**: the Go repos. It does **not**
+  extend `default.json`: it has its own groups (`GitHub Actions`,
+  `Go dependencies`) and runs everything on the weekend window except majors.
+  The Go repos' `.renovaterc.json` is itself a Copier output that adds
+  `presets/binary` or `presets/library` and `presets/copier-owned-files`.
+
+### Who moves which pin
+
+| Pin | Moved by |
+|---|---|
+| Ordinary dependencies, actions, `mise.toml` tools | Renovate, per the hub's groups |
+| `jdx/hk` and `hugoh/hk-config` in `*.pkl` / `mise.toml` | Renovate, through hk-config's custom managers (the built-in `mise` manager is off for `hk`) |
+| A Go repo's `mise.toml`, `hk.pkl`, `ci.yml` / `semantic-pr.yml` workflow pins | Copier only: `copier-owned-files` and `go-renovaterc` switch Renovate off for them, and the go-tools template update PR brings the new pins |
+| The same pins in go-tools' `template/` | Renovate in go-tools (`template dev tools`, typed `fix` so a release fans them out) |
+| A Go repo's toolchain (`.config/mise/conf.d/go.toml`) | Renovate (seeded once by Copier, then never re-rendered) |
+| Spoon versions in chezmoi's `hammerspoon.yaml` | chezmoi's own regex manager |
+
+### When things land
+
+| Window | What |
+|---|---|
+| Any time | Vulnerability fixes (6-hour soak), `first-party core` in the repos that own it (12 hours), Go patch toolchain bumps in binary repos (1 day) |
+| Saturday before 5am | `renovate CLI` |
+| Weekend (Fri 5pm–Sun 5am) | `minor updates`, `patch updates`, `first-party updates`; in the Go hub, everything but majors, including the go-tools template update |
+| First weekend of the month | Majors, lock file maintenance, `linters` (with hk and hk-config), `biome toolchain`; go-tools' `dev tools` / `template dev tools` |
+| Repo-specific | chezmoi runs `hugoh/**` (except hk-config) daily and lock files weekly; go-tools keeps `golangci-lint` weekly |
+
+Soaks: 7 days for third parties (`presets/base`), 1 day for `hugoh/**`
+(`presets/first-party-soak`), and 7 days for hk-config so it can't mature before
+the hk it needs.
+
+### How Renovate resolves a group
+
+Checked against Renovate 44's `workers/repository/updates/generate.js`. These
+rules explain most of the rule-order constraints below:
+
+- **Schedule**: the branch takes the config of the update whose `depName` sorts
+  first, so a group whose members have different schedules runs on an
+  arbitrary one. Every group here has a single schedule; a consumer override
+  that only matches some members of a group (a daily `hugoh/**` rule, a
+  catch-all `groupName`) breaks that.
+- **Soak**: each update matures on its own. A group branch drops the members
+  still inside their `minimumReleaseAge` and picks them up on a later run, which
+  is why hk and hk-config share the 7-day soak.
+- **Commit type**: the highest-priority type among the members wins (`fix` over
+  `chore`), so one `fix` member makes the whole group cut a release.
+- **Automerge**: only when every member allows it.
+
 ## What the base config does
 
 `default.json` is the fleet policy. In the order Renovate applies it:
 
-1. **Extends** Renovate's `config:best-practices` and automerge presets, and
-   the presets under `presets/`, chiefly `presets/base` (shared with go-tools'
-   `go-renovaterc`): the timezone, the first-weekend monthly window,
-   vulnerability alerts and `hugoh/hk-config//renovate.json` (how to *read* the
-   hk pins, see below).
-2. **Soak and schedule**: a 7-day `minimumReleaseAge` for third parties (from
-   `presets/base`), 1 day for `hugoh/**` (`presets/first-party-soak`), and the
-   monthly window (`presets/monthly-weekend`) for everything not overridden
-   below (major updates).
+1. **Extends** Renovate's `config:best-practices` and the presets under
+   `presets/`, chiefly `presets/base` (shared with go-tools' `go-renovaterc`):
+   the timezone, the first-weekend monthly window, vulnerability alerts,
+   automerge and `hugoh/hk-config//renovate.json` (how to *read* the hk pins,
+   see below).
+2. **Soak and schedule**: a 7-day `minimumReleaseAge` for third parties and 1
+   day for `hugoh/**` (both from `presets/base`), and the monthly window
+   (`presets/monthly-weekend`) for everything not overridden below (major
+   updates).
 3. **Groups**: all minor updates in one PR (`minor updates`); patch, pin and
    digest updates in another (`patch updates`). Both use the weekend window.
 4. **First-party**: minor, patch, pin and digest updates of `hugoh/**` get
@@ -53,11 +125,11 @@ Repos that release from conventional commits need dependency bumps typed
 
 - `github>hugoh/renovate-config//presets/action-repo` — **every**
   github-actions bump is `fix`. For repos whose CI content *is* the
-  released artifact (reusable-workflow repos: `gh-workflows`,
-  `spoon-tools`).
+  released artifact (reusable-workflow repos: `gh-workflows`).
 - `github>hugoh/renovate-config//presets/action-file` — only a bump to
   the published `action.yml` is `fix`. For composite-action repos
-  (`cog-bump`, `digest-action`, `rerun-transient-failures`).
+  (`cog-bump`, `digest-action`, `rerun-transient-failures`,
+  `checkly-config`).
 
 ### `presets/weekend`
 
@@ -74,8 +146,7 @@ top level or inside a `packageRules` entry:
 
 `go-tools/go-renovaterc.json` intentionally does **not** extend this
 preset wholesale: it keeps its own groups for the Go cluster. It does extend
-`presets/base` and, for `hugoh/**`, `presets/first-party-soak`, so the shared
-policy is identical across both clusters. `spoon-tools/default.json`
+`presets/base`, so the shared policy is identical across both clusters. `spoon-tools/default.json`
 extends this preset directly and layers a `lua` version ceiling on top.
 
 ### `presets/monthly-weekend`
@@ -108,10 +179,6 @@ daily and would otherwise open one PR per run inside the 36-hour weekend window.
 
 Small presets the config always extends:
 
-- `npm-renovate-debounce` puts the mise-managed `npm:renovate` pin in its own
-  `renovate CLI` group on `presets/saturday-early`. `default.json` repeats the
-  rule below the generic groups (see "Rule order matters"); go-tools, which
-  doesn't extend `default.json`, gets it through this preset.
 - `node-lts` makes the mise manager treat `node` versions with Node's
   versioning, so only LTS-style bumps are proposed.
 - `jsdelivr-npm` is a regex manager for `cdn.jsdelivr.net/npm/<pkg>@<ver>/`
@@ -121,20 +188,29 @@ Small presets the config always extends:
 - `vulnerability-alerts` labels security PRs, automerges them at any time and
   only waits 6 hours.
 
+`npm-renovate-debounce` puts the mise-managed `npm:renovate` pin in its own
+`renovate CLI` group on `presets/saturday-early`. It is for go-tools, which
+doesn't extend `default.json`; `default.json` has the same rule inline, below
+the generic groups (see "Rule order matters").
+
 ### `presets/base`
 
 Policy every hub shares, so it is defined once: the timezone the schedule
 presets are evaluated in (`America/Chicago`), the 7-day third-party
-`minimumReleaseAge`, `presets/monthly-weekend`, `presets/vulnerability-alerts`,
-and `hugoh/hk-config//renovate.json` (how to read the hk pins). `default.json` and
+`minimumReleaseAge` and the 1-day one for `hugoh/**`
+(`presets/first-party-soak`), `presets/monthly-weekend`,
+`presets/vulnerability-alerts` plus OSV alerts, Renovate's `:automergeLinters`,
+`:automergeMinor` and `:automergeDigest`, and `hugoh/hk-config//renovate.json`
+(how to read the hk pins). `default.json` and
 go-tools' `go-renovaterc.json` extend it and add their own ecosystem rules and
 groups on top.
 
 ### `presets/first-party-soak`
 
 A 1-day `minimumReleaseAge` for my own packages (actions, reusable workflows,
-spoons, go-tools). A preset cannot carry `match*` options, so extend it from a
-`packageRule` that matches the first-party packages:
+spoons, go-tools). `presets/base` already applies it to `hugoh/**`. A preset
+cannot carry `match*` options, so it is extended from a `packageRule` that
+matches the first-party packages:
 
 ```json
 {
@@ -169,9 +245,10 @@ rule lists a tool hk-config no longer runs. Since the check also runs when
 Renovate bumps the hk-config pin, a new linter shows up as a failing PR rather
 than as a tool that quietly stays weekly.
 
-`npm:renovate` has the same problem: `npm-renovate-debounce` extends before the
-generic groups, which then replace its group and schedule, so `default.json`
-repeats it as the `renovate CLI` rule below them.
+`npm:renovate` has the same problem: a rule pulled in through `extends` (such
+as `npm-renovate-debounce`'s) would come before the generic groups, which would
+replace its group and schedule, so `default.json` has its own `renovate CLI`
+rule below them.
 
 The `biome toolchain` group (an inline rule in `default.json`) is such a group
 (and it also looks both biome entries up on npm, because the mise manager's own
