@@ -16,6 +16,78 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
 `github>hugoh/renovate-config` first in their `extends` array and add their own
 `packageRules` afterward.
 
+## How it all fits together
+
+Every repo extends one of three hubs, and all three sit on `presets/base`:
+
+```mermaid
+flowchart TD
+  hkc["hugoh/hk-config//renovate.json<br/>(how to read the hk pins)"] --> base
+  base["presets/base<br/>timezone · soak · monthly window · vuln alerts"]
+  base --> default["default.json<br/>github>hugoh/renovate-config"]
+  base --> go["go-tools: go-renovaterc.json"]
+  default --> plain["most repos"]
+  default --> spoon["spoon-tools: default.json<br/>lua ceiling · hs-mock pin"]
+  spoon --> spoons["*.spoon, hs-mock"]
+  go --> gotools["go-tools (own .renovaterc.json)"]
+  go --> gorepos["Go repos (Copier-generated .renovaterc.json)"]
+```
+
+- **`github>hugoh/renovate-config`** (`default.json`): every repo that isn't a
+  spoon or a Go project, plus `spoon-tools` itself. Releasing repos add
+  `presets/action-repo` (`gh-workflows`) or `presets/action-file` (`cog-bump`,
+  `digest-action`, `rerun-transient-failures`, `checkly-config`).
+- **`github>hugoh/spoon-tools`**: the Hammerspoon spoons and `hs-mock`. It is
+  `default.json` plus a `lua` ceiling and a regex manager for the
+  `HS_MOCK_VERSION` pin in `mise.toml`.
+- **`github>hugoh/go-tools:go-renovaterc`**: the Go repos. It does **not**
+  extend `default.json`: it has its own groups (`GitHub Actions`,
+  `Go dependencies`) and runs everything on the weekend window except majors.
+  The Go repos' `.renovaterc.json` is itself a Copier output that adds
+  `presets/binary` or `presets/library` and `presets/copier-owned-files`.
+
+### Who moves which pin
+
+| Pin | Moved by |
+|---|---|
+| Ordinary dependencies, actions, `mise.toml` tools | Renovate, per the hub's groups |
+| `jdx/hk` and `hugoh/hk-config` in `*.pkl` / `mise.toml` | Renovate, through hk-config's custom managers (the built-in `mise` manager is off for `hk`) |
+| A Go repo's `mise.toml`, `hk.pkl`, `ci.yml` / `semantic-pr.yml` workflow pins | Copier only: `copier-owned-files` and `go-renovaterc` switch Renovate off for them, and the go-tools template update PR brings the new pins |
+| The same pins in go-tools' `template/` | Renovate in go-tools (`template dev tools`, typed `fix` so a release fans them out) |
+| A Go repo's toolchain (`.config/mise/conf.d/go.toml`) | Renovate (seeded once by Copier, then never re-rendered) |
+| Spoon versions in chezmoi's `hammerspoon.yaml` | chezmoi's own regex manager |
+
+### When things land
+
+| Window | What |
+|---|---|
+| Any time | Vulnerability fixes (6-hour soak), `first-party core` in the repos that own it (12 hours), Go patch toolchain bumps in binary repos (1 day) |
+| Saturday before 5am | `renovate CLI` |
+| Weekend (Fri 5pm–Sun 5am) | `minor updates`, `patch updates`, `first-party updates`; in the Go hub, everything but majors, including the go-tools template update |
+| First weekend of the month | Majors, lock file maintenance, `linters` (with hk and hk-config), `biome toolchain`; go-tools' `dev tools` / `template dev tools` |
+| Repo-specific | chezmoi runs `hugoh/**` (except hk-config) daily and lock files weekly; go-tools keeps `golangci-lint` weekly |
+
+Soaks: 7 days for third parties (`presets/base`), 1 day for `hugoh/**`
+(`presets/first-party-soak`), and 7 days for hk-config so it can't mature before
+the hk it needs.
+
+### How Renovate resolves a group
+
+Checked against Renovate 44's `workers/repository/updates/generate.js`. These
+rules explain most of the rule-order constraints below:
+
+- **Schedule**: the branch takes the config of the update whose `depName` sorts
+  first, so a group whose members have different schedules runs on an
+  arbitrary one. Every group here has a single schedule; a consumer override
+  that only matches some members of a group (a daily `hugoh/**` rule, a
+  catch-all `groupName`) breaks that.
+- **Soak**: each update matures on its own. A group branch drops the members
+  still inside their `minimumReleaseAge` and picks them up on a later run, which
+  is why hk and hk-config share the 7-day soak.
+- **Commit type**: the highest-priority type among the members wins (`fix` over
+  `chore`), so one `fix` member makes the whole group cut a release.
+- **Automerge**: only when every member allows it.
+
 ## What the base config does
 
 `default.json` is the fleet policy. In the order Renovate applies it:
@@ -53,11 +125,11 @@ Repos that release from conventional commits need dependency bumps typed
 
 - `github>hugoh/renovate-config//presets/action-repo` — **every**
   github-actions bump is `fix`. For repos whose CI content *is* the
-  released artifact (reusable-workflow repos: `gh-workflows`,
-  `spoon-tools`).
+  released artifact (reusable-workflow repos: `gh-workflows`).
 - `github>hugoh/renovate-config//presets/action-file` — only a bump to
   the published `action.yml` is `fix`. For composite-action repos
-  (`cog-bump`, `digest-action`, `rerun-transient-failures`).
+  (`cog-bump`, `digest-action`, `rerun-transient-failures`,
+  `checkly-config`).
 
 ### `presets/weekend`
 
