@@ -60,8 +60,8 @@ Repos that release from conventional commits need dependency bumps typed
 
 A `schedule` for Friday 5pm to Sunday 5am: updates land at the start of
 the weekend, leaving time to fix anything that breaks. The base config
-uses it for the weekly minor and patch/pin/digest groups. Extend it at the top level or inside a `packageRules`
-entry:
+uses it for the weekly minor and patch/pin/digest groups. Extend it at the
+top level or inside a `packageRules` entry:
 
 ```json
 "extends": ["github>hugoh/renovate-config//presets/weekend"]
