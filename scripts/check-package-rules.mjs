@@ -190,6 +190,9 @@ const cases = [
     ["github:owenlamont/ryl", "github-releases"],
     ["aqua:Kampfkarren/selene", "github-releases"],
     ["aqua:anordal/shellharden", "github-releases"],
+    ["pypi:ansible-lint", "pypi"],
+    ["checkov", "github-releases"],
+    ["swiftlint", "github-releases"],
   ].flatMap(([dep, datasource]) =>
     ["patch", "minor"].map((updateType) => [
       `${dep} ${updateType} in mise.toml`,
@@ -416,7 +419,12 @@ const EXCLUDED = {
   tofu: "infrastructure tool, not a linter",
   trivy: "security scanner, stays on the weekly groups",
 };
-const REPO_LOCAL = new Set(["editorconfig-checker"]);
+const REPO_LOCAL = new Set([
+  "editorconfig-checker",
+  "pypi:ansible-lint",
+  "checkov",
+  "swiftlint",
+]);
 
 function stepTools() {
   const source = process.env.HK_CONFIG_BASE_PKL;

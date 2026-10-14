@@ -18,7 +18,8 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
 
 ## How it all fits together
 
-Every repo extends one of three hubs, and all three sit on `presets/base`:
+Every repo extends one of three hubs, and all three sit on
+[`presets/base`][base]:
 
 ```mermaid
 flowchart TD
@@ -33,29 +34,34 @@ flowchart TD
   go --> gorepos["Go repos (Copier-generated .renovaterc.json)"]
 ```
 
-- **`github>hugoh/renovate-config`** (`default.json`): every repo that isn't a
-  spoon or a Go project, plus `spoon-tools` itself. Releasing repos add
+- **`github>hugoh/renovate-config`** ([`default.json`][default],
+  [repos that use it][default-users]): every repo that isn't a spoon or a Go
+  project, plus `spoon-tools` itself. Releasing repos add
   `presets/action-repo` (`gh-workflows`) or `presets/action-file` (`cog-bump`,
-  `digest-action`, `rerun-transient-failures`, `checkly-config`).
-- **`github>hugoh/spoon-tools`**: the Hammerspoon spoons and `hs-mock`. It is
+  `digest-action`, `rerun-transient-failures`, `checkly-config`); `spoon-tools`
+  types only the bumps in its published `spoon-release.yml` as `fix`.
+- **`github>hugoh/spoon-tools`** ([`default.json`][spoon],
+  [repos that use it][spoon-users]): the Hammerspoon spoons and `hs-mock`. It is
   `default.json` plus a `lua` ceiling and a regex manager for the
   `HS_MOCK_VERSION` pin in `mise.toml`.
-- **`github>hugoh/go-tools:go-renovaterc`**: the Go repos. It does **not**
+- **`github>hugoh/go-tools:go-renovaterc`** ([`go-renovaterc.json`][go],
+  [repos that use it][go-users]): the Go repos. It does **not**
   extend `default.json`: it has its own groups (`GitHub Actions`,
   `Go dependencies`) and runs everything on the weekend window except majors.
   The Go repos' `.renovaterc.json` is itself a Copier output that adds
-  `presets/binary` or `presets/library` and `presets/copier-owned-files`.
+  [`presets/binary`][go-binary] or [`presets/library`][go-library] and
+  [`presets/copier-owned-files`][go-copier].
 
 ### Who moves which pin
 
 | Pin | Moved by |
 |---|---|
 | Ordinary dependencies, actions, `mise.toml` tools | Renovate, per the hub's groups |
-| `jdx/hk` and `hugoh/hk-config` in `*.pkl` / `mise.toml` | Renovate, through hk-config's custom managers (the built-in `mise` manager is off for `hk`) |
+| `jdx/hk` and `hugoh/hk-config` in `*.pkl` / `mise.toml` | Renovate, through [hk-config's custom managers][hk-config] (the built-in `mise` manager is off for `hk`) |
 | A Go repo's `mise.toml`, `hk.pkl`, `ci.yml` / `semantic-pr.yml` workflow pins | Copier only: `copier-owned-files` and `go-renovaterc` switch Renovate off for them, and the go-tools template update PR brings the new pins |
 | The same pins in go-tools' `template/` | Renovate in go-tools (`template dev tools`, typed `fix` so a release fans them out) |
 | A Go repo's toolchain (`.config/mise/conf.d/go.toml`) | Renovate (seeded once by Copier, then never re-rendered) |
-| Spoon versions in chezmoi's `hammerspoon.yaml` | chezmoi's own regex manager |
+| Spoon versions in chezmoi's `hammerspoon.yaml` | [chezmoi's own regex manager][chezmoi] |
 
 ### When things land
 
@@ -87,6 +93,19 @@ rules explain most of the rule-order constraints below:
 - **Commit type**: the highest-priority type among the members wins (`fix` over
   `chore`), so one `fix` member makes the whole group cut a release.
 - **Automerge**: only when every member allows it.
+
+[base]: presets/base.json
+[default]: default.json
+[default-users]: https://github.com/search?q=org%3Ahugoh+%22github%3Ehugoh%2Frenovate-config%22+path%3A%2F%28%5E%7C%5C%2F%29%5C.%3Frenovate%28rc%29%3F%5C.json%24%2F&type=code
+[spoon]: https://github.com/hugoh/spoon-tools/blob/main/default.json
+[spoon-users]: https://github.com/search?q=org%3Ahugoh+%22github%3Ehugoh%2Fspoon-tools%22&type=code
+[go]: https://github.com/hugoh/go-tools/blob/main/go-renovaterc.json
+[go-users]: https://github.com/search?q=org%3Ahugoh+%22github%3Ehugoh%2Fgo-tools%3Ago-renovaterc%22&type=code
+[go-binary]: https://github.com/hugoh/go-tools/blob/main/presets/binary.json
+[go-library]: https://github.com/hugoh/go-tools/blob/main/presets/library.json
+[go-copier]: https://github.com/hugoh/go-tools/blob/main/presets/copier-owned-files.json
+[hk-config]: https://github.com/hugoh/hk-config/blob/main/renovate.json
+[chezmoi]: https://github.com/hugoh/config/blob/chezmoi/.renovaterc.json
 
 ## What the base config does
 
@@ -225,8 +244,9 @@ The `linters` group is one of these: the pinned linters in the repo-root
 `mise.toml` move monthly, in one PR, on `presets/monthly-weekend`. It needs its
 own `groupName` (a group whose members have different schedules ends up on the
 wrong one) and has to sit below the generic groups and above `biome toolchain`.
-Its tool list is the tools behind hk-config's `base.pkl` steps, plus
-`editorconfig-checker`. `base.pkl`'s `stepTools` maps each hk step to the mise
+Its tool list is the tools behind hk-config's `base.pkl` steps, plus linters
+only some repos run (`editorconfig-checker`, `pypi:ansible-lint`, `checkov`,
+`swiftlint`). `base.pkl`'s `stepTools` maps each hk step to the mise
 tool behind it, and `scripts/check-package-rules.mjs` evaluates it from the
 hk-config version pinned in `hk.pkl` (or the `base.pkl` named by
 `HK_CONFIG_BASE_PKL`, to try an unreleased hk-config) and fails when a tool is
