@@ -278,6 +278,12 @@ const scheduleCases = [
   ["major schedule: monthly fallthrough", update("example/other", "github-releases", "major"), undefined],
   ["linters schedule: first weekend", update("typos", "github-releases", "patch", "mise", "typos"), monthlyWeekend],
   ["npm:renovate schedule: early Saturday", update("renovate", "npm", "patch", "mise", "npm:renovate"), saturdayEarly],
+  // The biome toolchain is a linter too: pin and $schema share one group, so
+  // they must share its window. Majors are included, they don't fall through.
+  ["biome mise pin schedule: first weekend", update("@biomejs/biome", "npm", "patch", "mise", "biome", "mise.toml"), monthlyWeekend],
+  ["biome mise pin minor schedule: first weekend", update("@biomejs/biome", "npm", "minor", "mise", "biome", "mise.toml"), monthlyWeekend],
+  ["biome schema schedule: first weekend", update("@biomejs/biome", "npm", "minor", "custom.jsonata", "@biomejs/biome", "biome.json"), monthlyWeekend],
+  ["biome major schedule: first weekend", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), monthlyWeekend],
 ];
 for (const [name, input, expected] of scheduleCases) {
   const out = await applyPackageRules(input);

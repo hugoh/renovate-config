@@ -37,7 +37,8 @@ Repos with their own additional rules (version pins, extra managers, etc.) list
 5. **`linters`** and **`renovate CLI`**: below the generic groups so they win
    over them, with the linters on the monthly window and the renovate CLI on
    `presets/saturday-early` (see below).
-6. **`biome toolchain`**: last, so it wins over the generic groups (see below).
+6. **`biome toolchain`**: last, so it wins over the generic groups, on the same
+   monthly window as the linters (see below).
 
 A consuming repo's own `packageRules` come after all of this, so they can
 override any of it.
@@ -59,9 +60,8 @@ Repos that release from conventional commits need dependency bumps typed
 
 A `schedule` for Friday 5pm to Sunday 5am: updates land at the start of
 the weekend, leaving time to fix anything that breaks. The base config
-uses it for the weekly minor and patch/pin/digest groups and, through `chain-debounce`,
-for the biome toolchain. Extend it at the top level or inside a `packageRules`
-entry:
+uses it for the weekly minor and patch/pin/digest groups. Extend it at the
+top level or inside a `packageRules` entry:
 
 ```json
 "extends": ["github>hugoh/renovate-config//presets/weekend"]
@@ -92,7 +92,9 @@ it, so every hub's major updates and lock file maintenance share it; go-tools'
 Holds a frequently released dependency (one that ships several times a week
 and would otherwise open a PR for each) to the weekend window. It is just
 `presets/weekend` under a name that says why it is used; extend it inside a
-`packageRules` entry. Used for the biome toolchain.
+`packageRules` entry. Not used in this repo's own rules any more (the biome
+toolchain moved to `presets/monthly-weekend`, `npm:renovate` to
+`presets/saturday-early`); go-tools' Copier update rule still uses it.
 
 ### `presets/saturday-early`
 
@@ -174,11 +176,16 @@ The `biome toolchain` group (an inline rule in `default.json`) is such a group
 the `biome` pin in `mise.toml` and the `$schema` URL in
 `biome.json` are read by different managers, so without a shared group one can
 land a release before the other and biome reports a schema/CLI version
-mismatch. Its matcher is the last rule in `default.json`.
+mismatch. Its matcher is the last rule in `default.json`. Biome is a linter and
+formatter, so the group follows the linters onto `presets/monthly-weekend`
+(majors included, where they would otherwise be the one major that landed
+weekly): a release that adds a rule or reformats code can fail CI, and a month
+of batching keeps that to one PR. The schedule is the group's, so the pin and
+the `$schema` always move in the same window.
 `scripts/check-package-rules.mjs` (the `package-rules` step in `hk.pkl`)
 enforces this: it resolves the presets from this checkout, runs the rules
 through Renovate's own matcher and fails if the biome pins stop sharing the
-group, or if the generic groups, soaks or schedules change.
+group or window, or if the generic groups, soaks or schedules change.
 
 ### The hk pins
 
