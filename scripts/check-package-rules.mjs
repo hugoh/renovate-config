@@ -122,12 +122,13 @@ const update = (
   datasource,
   updateType,
   packageFile,
+  repository: "example/consumer",
 });
 
 const cases = [
   // [description, update, expected groupName]
-  // jdx/hk joins the linters group; hk-config has its own group in the same
-  // monthly window (README: "The hk pins").
+  // jdx/hk and hk-config join the linters group, except jdx/hk in the
+  // hk-config repo, where it is part of the project (README: "The hk pins").
   [
     "jdx/hk minor",
     update("jdx/hk", "github-releases", "minor"),
@@ -136,12 +137,22 @@ const cases = [
   [
     "hk-config patch",
     update("hugoh/hk-config", "github-tags", "patch"),
-    "hk-config",
+    "linters",
   ],
   [
     "hk-config minor",
     update("hugoh/hk-config", "github-tags", "minor"),
-    "hk-config",
+    "linters",
+  ],
+  [
+    "jdx/hk in the hk-config repo is not a linter",
+    { ...update("jdx/hk", "github-releases", "minor"), repository: "hugoh/hk-config" },
+    "minor updates",
+  ],
+  [
+    "jdx/hk in another repo",
+    { ...update("jdx/hk", "github-releases", "minor"), repository: "hugoh/config" },
+    "linters",
   ],
   [
     "hk-config major stays ungrouped",
