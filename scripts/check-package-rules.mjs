@@ -313,7 +313,7 @@ for (const [name, input, expected] of overrideCases) {
 const base = resolveExtends(config);
 const soakCases = [
   ["first-party package: 1 day", "hugoh/some-tool", "github-tags", "1 day"],
-  ["hk-config: 1 day", "hugoh/hk-config", "github-tags", "1 day"],
+  ["hk-config: 7 days, like hk", "hugoh/hk-config", "github-tags", "7 days"],
   ["jdx/hk: 7 days", "jdx/hk", "github-releases", "7 days"],
   ["third-party package: 7 days", "biomejs/biome", "github-releases", "7 days"],
 ];

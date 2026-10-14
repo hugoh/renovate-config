@@ -195,8 +195,9 @@ group or window, or if the generic groups, soaks or schedules change.
 `hugoh/hk-config//renovate.json` (through `presets/base`) teaches Renovate how
 to read the `jdx/hk` and `hugoh/hk-config` pins: custom managers for `.pkl`
 and `mise.toml`, and disabling the built-in `mise` manager for `hk`. They are
-moved in one go: `jdx/hk` (7-day soak) and `hugoh/hk-config` (1-day soak) both
-join the `linters` group and its first-weekend window, since a release of
+moved in one go: `jdx/hk` and `hugoh/hk-config` both join the `linters`
+group and its first-weekend window, with the 7-day soak (hk-config's own
+1-day soak would let it mature before the hk it needs), since a release of
 either can fail CI like a linter release and hk-config needs a minimum hk
 (`min_hk_version`; see hk-config's README). Not in the hk-config repo itself,
 where hk is part of the project rather than a tool it lints with: there
