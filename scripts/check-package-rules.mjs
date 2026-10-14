@@ -417,9 +417,6 @@ const EXCLUDED = {
   trivy: "security scanner, stays on the weekly groups",
 };
 const REPO_LOCAL = new Set(["editorconfig-checker"]);
-// hk-config releases before the shellharden rename name it by its github:
-// backend; drop this once the hk.pkl pin is past that release.
-const RENAMED = { "github:anordal/shellharden": "aqua:anordal/shellharden" };
 
 function stepTools() {
   const source = process.env.HK_CONFIG_BASE_PKL;
@@ -447,11 +444,7 @@ const linters = new Set(
     (rule) => rule.groupName === "linters" && rule.matchDepNames,
   )?.matchDepNames ?? [],
 );
-const hkTools = new Set(
-  Object.values(stepTools())
-    .filter(Boolean)
-    .map((tool) => RENAMED[tool] ?? tool),
-);
+const hkTools = new Set(Object.values(stepTools()).filter(Boolean));
 const coverage = [
   ["unclassified hk-config tools", [...hkTools].filter((t) => !linters.has(t) && !(t in EXCLUDED))],
   ["linters entries hk-config no longer runs", [...linters].filter((t) => !hkTools.has(t) && !REPO_LOCAL.has(t))],
