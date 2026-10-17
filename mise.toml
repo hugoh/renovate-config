@@ -1,6 +1,6 @@
 [tools]
 node = "26.11.1"
-"npm:renovate" = { version = "44.132.5", trust_policy_excludes = ["*"] }
+"npm:renovate" = { version = "44.149.1", trust_policy_excludes = ["*"] }
 hk = "2.5.0"
 pkl = "0.32.1"
 actionlint = "1.7.12"
