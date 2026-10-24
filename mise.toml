@@ -1,5 +1,5 @@
 [tools]
-node = "26.11.1"
+node = "26.12.0"
 "npm:renovate" = { version = "44.149.1", trust_policy_excludes = ["*"] }
 hk = "2.5.0"
 pkl = "0.32.1"
