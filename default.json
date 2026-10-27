@@ -71,7 +71,7 @@
       "matchManagers": ["mise"],
       "matchFileNames": ["mise.toml"],
       "matchDepNames": [
-        "actionlint",
+        "jactionlint",
         "pypi:ansible-lint",
         "checkov",
         "editorconfig-checker",
