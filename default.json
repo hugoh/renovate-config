@@ -90,8 +90,7 @@
         "tflint",
         "tombi",
         "ty",
-        "typos",
-        "zizmor"
+        "typos"
       ],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "linters",
