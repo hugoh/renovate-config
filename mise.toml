@@ -1,8 +1,8 @@
 [tools]
-node = "26.12.0"
+node = "26.12.1"
 "npm:renovate" = { version = "44.165.2", trust_policy_excludes = ["*"] }
 hk = "2.9.0"
-pkl = "0.32.1"
+pkl = "0.32.2"
 jactionlint = "2.2.0"
 pinact = "5.0.0"
 ghalint = "1.5.6"
