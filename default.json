@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": [
-    "hugoh/hk-config//renovate.json is extended through presets/base, so every consumer gets its custom managers (the hugoh/hk-config and jdx/hk pins in *.pkl / mise.toml) and the built-in mise manager is disabled for `hk`. Repos without hk.pkl are unaffected: the managers match nothing. The timezone, soaks (7 days third-party, 1 day hugoh/**), monthly window, vulnerability alerts and automerge presets also come from presets/base."
+    "hugoh/hk-config//presets/hk-pins is extended through presets/base, so every consumer gets its custom managers (the hugoh/hk-config and jdx/hk pins in *.pkl / mise.toml) and the built-in mise manager is disabled for `hk`. Repos without hk.pkl are unaffected: the managers match nothing. The timezone, soaks (7 days third-party, 1 day hugoh/**), monthly window, vulnerability alerts and automerge presets also come from presets/base."
   ],
   "extends": [
     "config:best-practices",
