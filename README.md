@@ -23,7 +23,7 @@ Every repo extends one of three hubs, and all three sit on
 
 ```mermaid
 flowchart TD
-  hkc["hugoh/hk-config//renovate.json<br/>(how to read the hk pins)"] --> base
+  hkc["hugoh/hk-config//presets/hk-pins<br/>(how to read the hk pins)"] --> base
   base["presets/base<br/>timezone · soak · monthly window · vuln alerts"]
   base --> default["default.json<br/>github>hugoh/renovate-config"]
   base --> go["go-tools: go-renovaterc.json"]
@@ -104,7 +104,7 @@ rules explain most of the rule-order constraints below:
 [go-binary]: https://github.com/hugoh/go-tools/blob/main/presets/binary.json
 [go-library]: https://github.com/hugoh/go-tools/blob/main/presets/library.json
 [go-copier]: https://github.com/hugoh/go-tools/blob/main/presets/copier-owned-files.json
-[hk-config]: https://github.com/hugoh/hk-config/blob/main/renovate.json
+[hk-config]: https://github.com/hugoh/hk-config/blob/main/presets/hk-pins.json
 [chezmoi]: https://github.com/hugoh/config/blob/chezmoi/.renovaterc.json
 
 ## What the base config does
@@ -114,7 +114,7 @@ rules explain most of the rule-order constraints below:
 1. **Extends** Renovate's `config:best-practices` and the presets under
    `presets/`, chiefly `presets/base` (shared with go-tools' `go-renovaterc`):
    the timezone, the first-weekend monthly window, vulnerability alerts,
-   automerge and `hugoh/hk-config//renovate.json` (how to *read* the hk pins,
+   automerge and `hugoh/hk-config//presets/hk-pins` (how to *read* the hk pins,
    see below).
 2. **Soak and schedule**: a 7-day `minimumReleaseAge` for third parties and 1
    day for `hugoh/**` (both from `presets/base`), and the monthly window
@@ -210,7 +210,7 @@ presets are evaluated in (`America/Chicago`), the 7-day third-party
 `minimumReleaseAge` and the 1-day one for `hugoh/**`
 (`presets/first-party-soak`), `presets/monthly-weekend`,
 `presets/vulnerability-alerts` plus OSV alerts, Renovate's `:automergeLinters`,
-`:automergeMinor` and `:automergeDigest`, and `hugoh/hk-config//renovate.json`
+`:automergeMinor` and `:automergeDigest`, and `hugoh/hk-config//presets/hk-pins`
 (how to read the hk pins). `default.json` and
 go-tools' `go-renovaterc.json` extend it and add their own ecosystem rules and
 groups on top.
@@ -280,7 +280,7 @@ group or window, or if the generic groups, soaks or schedules change.
 
 ### The hk pins
 
-`hugoh/hk-config//renovate.json` (through `presets/base`) teaches Renovate how
+`hugoh/hk-config//presets/hk-pins` (through `presets/base`) teaches Renovate how
 to read the `jdx/hk` and `hugoh/hk-config` pins: custom managers for `.pkl`
 and `mise.toml`, and disabling the built-in `mise` manager for `hk`. They are
 moved in one go: `jdx/hk` and `hugoh/hk-config` both join the `linters`
