@@ -23,7 +23,7 @@
       "automerge": true
     },
     {
-      "description": "Tooling majors land on the weekend window instead of waiting for the first weekend of the month: they automerge once CI is green, so there is no pile to triage, and repos drift less. Same 7-day soak. The biome toolchain group (pin and $schema in one PR) and the renovate CLI keep their own windows, set by default.json's later rules.",
+      "description": "Tooling majors land on the weekend window instead of waiting for the first weekend of the month: they automerge once CI is green, so there is no pile to triage, and repos drift less. Same 7-day soak. The renovate CLI keeps its own window, set by default.json's later rule; biome majors are put on the weekend window by default.json too, since its toolchain group otherwise puts every update type on the monthly one.",
       "matchManagers": [
         "github-actions",
         "mise",

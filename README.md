@@ -71,7 +71,7 @@ flowchart TD
 | Saturday before 5am | `renovate CLI` |
 | Weekend (Fri 5pm–Sun 5am) | `minor updates`, `patch updates`, `first-party updates`; in the Go hub, everything but majors, including the go-tools template update |
 | Weekend (Fri 5pm–Sun 5am) | …plus tooling majors (GitHub Actions, mise, Copier, pre-commit, the hk pins), which automerge once CI is green |
-| First weekend of the month | Majors of shipped code, lock file maintenance, `linters` (with hk and hk-config), `biome toolchain`; go-tools' `dev tools` / `template dev tools` |
+| First weekend of the month | Majors of shipped code, lock file maintenance, `linters` (with hk and hk-config), `biome toolchain` (minor and patch); go-tools' `dev tools` / `template dev tools` |
 | Repo-specific | chezmoi runs `hugoh/**` (except hk-config) daily and lock files weekly; go-tools keeps `golangci-lint` weekly |
 
 Soaks: 7 days for third parties (`presets/base`), 1 day for `hugoh/**`
@@ -133,7 +133,7 @@ rules explain most of the rule-order constraints below:
    over them, with the linters on the monthly window and the renovate CLI on
    `presets/saturday-early` (see below).
 6. **`biome toolchain`**: last, so it wins over the generic groups, on the same
-   monthly window as the linters (see below).
+   monthly window as the linters, majors excepted (see below).
 
 A consuming repo's own `packageRules` come after all of this, so they can
 override any of it.
@@ -164,10 +164,9 @@ and everything else that sets `automerge` itself are unchanged.
 Tooling majors also take the weekend window instead of waiting for the first
 weekend of the month: with automerge there is no pile to triage, and repos
 drift less. The soak stays at 7 days (longer buys little: compromises and bad
-releases surface within days, and CI is the real gate). The `biome toolchain`
-group and the renovate CLI keep their own windows, and so does the Go hub: its
-catch-all major rule runs after `presets/base` and puts every major on the
-monthly window. Majors of shipped code stay on the monthly window, since I
+releases surface within days, and CI is the real gate). The renovate CLI keeps
+its own window. The Go hub's catch-all major rule skips these managers so they
+keep the weekend window. Majors of shipped code stay on the monthly window, since I
 merge them by hand.
 
 The preset sets no groups, so it can sit in `presets/base` (before the hubs'
@@ -309,11 +308,12 @@ the `biome` pin in `mise.toml` and the `$schema` URL in
 `biome.json` are read by different managers, so without a shared group one can
 land a release before the other and biome reports a schema/CLI version
 mismatch. Its matcher is the last rule in `default.json`. Biome is a linter and
-formatter, so the group follows the linters onto `presets/monthly-weekend`
-(majors included, where they would otherwise be the one major that landed
-weekly): a release that adds a rule or reformats code can fail CI, and a month
-of batching keeps that to one PR. The schedule is the group's, so the pin and
-the `$schema` always move in the same window.
+formatter, so the group follows the linters onto `presets/monthly-weekend`:
+a release that adds a rule or reformats code can fail CI, and a month of
+batching keeps that to one PR. Majors are the exception (a rule right below
+puts them on the weekend window, like every tooling major, since they
+automerge). Either way the schedule is the group's, so the pin and the
+`$schema` always move in the same window.
 `scripts/check-package-rules.mjs` (the `package-rules` step in `hk.pkl`)
 enforces this: it resolves the presets from this checkout, runs the rules
 through Renovate's own matcher and fails if the biome pins stop sharing the

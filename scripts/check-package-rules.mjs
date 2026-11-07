@@ -417,7 +417,9 @@ const scheduleCases = [
   ["hk-config patch schedule: first weekend", update("hugoh/hk-config", "github-tags", "patch"), monthlyWeekend],
   ["hk-config minor schedule: first weekend", update("hugoh/hk-config", "github-tags", "minor"), monthlyWeekend],
   ["biome schema schedule: first weekend", update("@biomejs/biome", "npm", "minor", "custom.jsonata", "@biomejs/biome", "biome.json"), monthlyWeekend],
-  ["biome major schedule: first weekend", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), monthlyWeekend],
+  // Majors are tooling that automerges: weekend, like the other tooling majors.
+  ["biome major schedule: weekend", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), weekend],
+  ["biome schema major schedule: weekend", update("@biomejs/biome", "npm", "major", "custom.jsonata", "@biomejs/biome", "biome.json"), weekend],
 ];
 for (const [name, input, expected] of scheduleCases) {
   const out = await applyPackageRules(input);
