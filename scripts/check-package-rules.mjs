@@ -400,6 +400,13 @@ const scheduleCases = [
   ["minor schedule: weekend", update("example/other", "github-releases", "minor"), weekend],
   ["patch schedule: weekend", update("example/other", "github-releases", "patch"), weekend],
   ["major schedule: monthly fallthrough", update("example/other", "github-releases", "major"), undefined],
+  // Tooling majors automerge, so they take the weekend window; shipped code's
+  // majors (manual) stay on the monthly one. biome's group keeps its own.
+  ["tool major schedule: weekend (mise)", update("pinact", "github-releases", "major", "mise", "pinact"), weekend],
+  ["tool major schedule: weekend (actions)", update("actions/checkout", "github-tags", "major", "github-actions"), weekend],
+  ["hk major schedule: weekend", update("jdx/hk", "github-releases", "major"), weekend],
+  ["hk-config major schedule: weekend", update("hugoh/hk-config", "github-tags", "major"), weekend],
+  ["cargo major schedule: monthly fallthrough", update("tokio", "crate", "major", "cargo", "tokio", "Cargo.toml"), undefined],
   ["linters schedule: first weekend", update("typos", "github-releases", "patch", "mise", "typos"), monthlyWeekend],
   ["npm:renovate schedule: early Saturday", update("renovate", "npm", "patch", "mise", "npm:renovate"), saturdayEarly],
   // The biome toolchain is a linter too: pin and $schema share one group, so

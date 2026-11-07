@@ -70,7 +70,8 @@ flowchart TD
 | Any time | Vulnerability fixes (6-hour soak), `first-party core` in the repos that own it (12 hours), Go patch toolchain bumps in binary repos (1 day) |
 | Saturday before 5am | `renovate CLI` |
 | Weekend (Fri 5pm–Sun 5am) | `minor updates`, `patch updates`, `first-party updates`; in the Go hub, everything but majors, including the go-tools template update |
-| First weekend of the month | Majors (tooling majors included: they automerge once CI is green), lock file maintenance, `linters` (with hk and hk-config), `biome toolchain`; go-tools' `dev tools` / `template dev tools` |
+| Weekend (Fri 5pm–Sun 5am) | …plus tooling majors (GitHub Actions, mise, Copier, pre-commit, the hk pins), which automerge once CI is green |
+| First weekend of the month | Majors of shipped code, lock file maintenance, `linters` (with hk and hk-config), `biome toolchain`; go-tools' `dev tools` / `template dev tools` |
 | Repo-specific | chezmoi runs `hugoh/**` (except hk-config) daily and lock files weekly; go-tools keeps `golangci-lint` weekly |
 
 Soaks: 7 days for third parties (`presets/base`), 1 day for `hugoh/**`
@@ -160,10 +161,17 @@ crates, npm and PyPI dependencies, CDN links) automerges minors and patches;
 its **majors** wait for me. Digests (`:automergeDigest`), `first-party core`
 and everything else that sets `automerge` itself are unchanged.
 
-The preset only sets `automerge`, never a group or a schedule, so it can sit in
-`presets/base` (before the hubs' own rules) without being overridden. Majors
-keep the monthly window and the 7-day soak; the only change is that a green
-tooling major no longer waits for me.
+Tooling majors also take the weekend window instead of waiting for the first
+weekend of the month: with automerge there is no pile to triage, and repos
+drift less. The soak stays at 7 days (longer buys little: compromises and bad
+releases surface within days, and CI is the real gate). The `biome toolchain`
+group and the renovate CLI keep their own windows, and so does the Go hub: its
+catch-all major rule runs after `presets/base` and puts every major on the
+monthly window. Majors of shipped code stay on the monthly window, since I
+merge them by hand.
+
+The preset sets no groups, so it can sit in `presets/base` (before the hubs'
+own rules) without being overridden.
 
 A group only automerges when every member does. The groups here are minor and
 patch only (majors are ungrouped), so none mixes the two kinds; the
