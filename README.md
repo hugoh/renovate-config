@@ -69,7 +69,7 @@ flowchart TD
 |---|---|
 | Any time | Vulnerability fixes (6-hour soak), `first-party core` in the repos that own it (12 hours), Go patch toolchain bumps in binary repos (1 day) |
 | Saturday before 5am | `renovate CLI` |
-| Weekend (Fri 5pm–Sun 5am) | `minor updates`, `patch updates`, `first-party updates`; in the Go hub, everything but majors, including the go-tools template update |
+| Weekend (Fri 5pm–Sun 5am) | `dependency updates`, `first-party updates`; in the Go hub, everything but majors, including the go-tools template update |
 | Weekend (Fri 5pm–Sun 5am) | …plus tooling majors (GitHub Actions, mise, Copier, pre-commit, the hk pins), which automerge once CI is green |
 | First weekend of the month | Majors of shipped code, lock file maintenance; go-tools' `dev tools` / `template dev tools` |
 | Repo-specific | chezmoi runs `hugoh/**` (except hk-config) daily and lock files weekly; go-tools keeps `golangci-lint` weekly |
@@ -121,8 +121,12 @@ rules explain most of the rule-order constraints below:
    day for `hugoh/**` (both from `presets/base`), and the monthly window
    (`presets/monthly-weekend`) for everything not overridden below (major
    updates).
-3. **Groups**: all minor updates in one PR (`minor updates`); patch, pin and
-   digest updates in another (`patch updates`). Both use the weekend window.
+3. **Groups**: every minor, patch, pin and digest update in one PR
+   (`dependency updates`), on the weekend window. Majors are never grouped.
+   Minors and patches used to be two groups because they ran on different
+   schedules; with one window the split had no reason left. The cost: a red
+   update turns the whole weekly PR red, patches and digests included, until
+   it is fixed.
 4. **First-party**: minor, patch, pin and digest updates of `hugoh/**` get
    their own group (`first-party updates`) so a consumer can give them a
    different schedule; the core packages (reusable workflows, composite
@@ -172,9 +176,9 @@ shipped code stay on the monthly window, since I merge them by hand.
 The preset sets no groups, so it can sit in `presets/base` (before the hubs'
 own rules) without being overridden.
 
-A group only automerges when every member does. The groups here are minor and
-patch only (majors are ungrouped), so none mixes the two kinds; the
-`package-rules` step fails if one starts to.
+A group only automerges when every member does. Majors are the only updates
+that differ between tooling and shipped code, and they are ungrouped, so no
+group mixes the two kinds; the `package-rules` step fails if one starts to.
 
 Things to know:
 
@@ -194,7 +198,7 @@ Things to know:
 
 A `schedule` for Friday 5pm to Sunday 5am: updates land at the start of
 the weekend, leaving time to fix anything that breaks. The base config
-uses it for the weekly minor and patch/pin/digest groups. Extend it at the
+uses it for the weekly `dependency updates` group. Extend it at the
 top level or inside a `packageRules` entry:
 
 ```json
@@ -278,9 +282,9 @@ restarting and its copier updates never matured; this is the fix.
 
 Renovate applies `packageRules` top to bottom and the last matching rule wins
 for each field. A hub's own rules come after everything pulled in through
-`extends`, and the generic `minor updates` / `patch updates` groups would
-override the `groupName` of any group rule above them. That is why a
-dependency-specific group must come after them.
+`extends`, and the generic `dependency updates` group would override the
+`groupName` of any group rule above them. That is why a dependency-specific
+group must come after them.
 
 The `hk` group is one of these (it needs its own `groupName`, which has to sit
 below the generic groups). Linters themselves have no rule: a pinned linter is
@@ -296,11 +300,11 @@ Biome has a rule in `default.json` only for its lookup: the mise manager's own
 `github-tags` lookup finds no biome updates (the tags are named
 `@biomejs/biome@<version>`), so the pin looks up on npm like the `$schema` URL
 in `biome.json` does. Otherwise biome is tooling like the rest, with no group
-or schedule of its own: both members join the generic weekly groups by update
-type (or are ungrouped majors) and automerge. They can land in different PRs;
-biome only warns when the `$schema` version differs from the CLI's, and the
-other one follows within the same run. If that ever starts failing CI, group
-the two again.
+or schedule of its own: both members join `dependency updates` and land in the
+same weekly PR, and automerge. Majors are ungrouped, so a biome major can
+arrive as two PRs; biome only warns when the `$schema` version differs from
+the CLI's, and the other one follows within the same run. If that ever starts
+failing CI, group the two majors again.
 `scripts/check-package-rules.mjs` (the `package-rules` step in `hk.pkl`)
 enforces the rest: it resolves the presets from this checkout, runs the rules
 through Renovate's own matcher and fails if the generic groups, soaks or

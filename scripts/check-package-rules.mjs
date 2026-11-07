@@ -2,7 +2,7 @@
 // Regression check for default.json's packageRules (see README: "Rule order
 // matters"). Runs them through Renovate's own rule matcher for synthetic
 // updates and fails if the policy changes: the renovate CLI group (which
-// must stay below the generic "minor updates" / "patch updates" rules, or
+// must stay below the generic "dependency updates" rule, or
 // their groupName replaces it), the generic groups themselves, the
 // first-party / third-party soak, the schedules, and who automerges.
 //
@@ -158,7 +158,7 @@ const cases = [
   [
     "jdx/hk in the hk-config repo is not paired",
     { ...update("jdx/hk", "github-releases", "minor"), repository: "hugoh/hk-config" },
-    "minor updates",
+    "dependency updates",
   ],
   [
     "jdx/hk in another repo",
@@ -175,22 +175,22 @@ const cases = [
   [
     "biome schema patch",
     update("biomejs/biome", "github-releases", "patch"),
-    "patch updates",
+    "dependency updates",
   ],
   [
     "biome schema minor",
     update("biomejs/biome", "github-releases", "minor"),
-    "minor updates",
+    "dependency updates",
   ],
   [
     "biome mise pin patch",
     update("biomejs/biome", "github-releases", "patch", "mise", "biome"),
-    "patch updates",
+    "dependency updates",
   ],
   [
     "biome mise pin minor",
     update("biomejs/biome", "github-releases", "minor", "mise", "biome"),
-    "minor updates",
+    "dependency updates",
   ],
   // Linters are tooling like the rest: no group of their own.
   ...["typos", "rumdl", "tombi", "github:owenlamont/ryl", "pypi:ansible-lint"].flatMap(
@@ -198,7 +198,7 @@ const cases = [
       ["patch", "minor"].map((updateType) => [
         `${dep} ${updateType} in mise.toml`,
         update(dep, dep.startsWith("pypi:") ? "pypi" : "github-releases", updateType, "mise", dep),
-        updateType === "patch" ? "patch updates" : "minor updates",
+        "dependency updates",
       ]),
   ),
   [
@@ -262,12 +262,12 @@ const cases = [
   [
     "other custom.regex minor",
     update("example/other", "github-releases", "minor"),
-    "minor updates",
+    "dependency updates",
   ],
   [
     "other custom.regex patch",
     update("example/other", "github-releases", "patch"),
-    "patch updates",
+    "dependency updates",
   ],
 ];
 
@@ -373,8 +373,10 @@ for (const [name, packageName, datasource, expected] of soakCases) {
     `${ok ? "ok  " : "FAIL"} ${name}: minimumReleaseAge=${out.minimumReleaseAge} (want ${expected})`,
   );
 }
-// Minor and patch share the weekend window; major gets no rule-level schedule
-// and so falls through to the monthly window from presets/base.
+// Minor, patch, pin and digest share the weekend window; major gets no
+// rule-level schedule
+// and so falls through to the monthly window from presets/base (tooling
+// majors excepted, below).
 const weekend = resolveExtends({
   extends: ["local>hugoh/renovate-config//presets/weekend"],
 }).schedule;
@@ -493,7 +495,7 @@ if (base.timezone !== "America/Chicago") {
 }
 if (failed) {
   console.error(
-    "\nThe renovate CLI rule in default.json must stay below the generic minor/patch grouping rules.",
+    "\nThe renovate CLI rule in default.json must stay below the generic dependency updates rule.",
   );
   process.exit(1);
 }
