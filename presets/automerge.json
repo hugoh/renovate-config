@@ -4,12 +4,7 @@
   "packageRules": [
     {
       "description": "Tooling: GitHub Actions, mise tools, Copier template updates, pre-commit hooks. All update types, majors included.",
-      "matchManagers": [
-        "github-actions",
-        "mise",
-        "copier",
-        "pre-commit"
-      ],
+      "matchManagers": ["github-actions", "mise", "copier", "pre-commit"],
       "automerge": true
     },
     {
@@ -24,18 +19,9 @@
     },
     {
       "description": "Tooling majors land on the weekend window instead of waiting for the first weekend of the month: they automerge once CI is green, so there is no pile to triage, and repos drift less. Same 7-day soak. The renovate CLI keeps its own window, set by default.json's later rule.",
-      "matchManagers": [
-        "github-actions",
-        "mise",
-        "copier",
-        "pre-commit"
-      ],
-      "matchUpdateTypes": [
-        "major"
-      ],
-      "extends": [
-        "local>hugoh/renovate-config//presets/weekend"
-      ]
+      "matchManagers": ["github-actions", "mise", "copier", "pre-commit"],
+      "matchUpdateTypes": ["major"],
+      "extends": ["local>hugoh/renovate-config//presets/weekend"]
     },
     {
       "description": "Same for the pins that custom managers read: hk, hk-config and the biome $schema, so they share the weekend window with the mise pin.",
@@ -45,12 +31,8 @@
         "@biomejs/biome",
         "biomejs/biome"
       ],
-      "matchUpdateTypes": [
-        "major"
-      ],
-      "extends": [
-        "local>hugoh/renovate-config//presets/weekend"
-      ]
+      "matchUpdateTypes": ["major"],
+      "extends": ["local>hugoh/renovate-config//presets/weekend"]
     }
   ]
 }

@@ -165,9 +165,9 @@ Tooling majors also take the weekend window instead of waiting for the first
 weekend of the month: with automerge there is no pile to triage, and repos
 drift less. The soak stays at 7 days (longer buys little: compromises and bad
 releases surface within days, and CI is the real gate). The renovate CLI keeps
-its own window; biome is on the weekend window too. The Go hub's catch-all major rule skips these managers so they
-keep the weekend window. Majors of shipped code stay on the monthly window, since I
-merge them by hand.
+its own window; biome is on the weekend window too. The Go hub's catch-all
+major rule skips these managers so they keep the weekend window. Majors of
+shipped code stay on the monthly window, since I merge them by hand.
 
 The preset sets no groups, so it can sit in `presets/base` (before the hubs'
 own rules) without being overridden.
@@ -250,9 +250,10 @@ presets are evaluated in (`America/Chicago`), the 7-day third-party
 `minimumReleaseAge` and the 1-day one for `hugoh/**`
 (`presets/first-party-soak`), `presets/monthly-weekend`,
 `presets/vulnerability-alerts` plus OSV alerts, `presets/automerge`,
-Renovate's `:automergeLinters`, `:automergeMinor` (keep it: it is what merges `pin`
-and lock file maintenance updates, not just minor and patch) and `:automergeDigest`, and `hugoh/hk-config//presets/hk-pins`
-(how to read the hk pins). `default.json` and
+Renovate's `:automergeLinters`, `:automergeMinor` (keep it: it is what merges
+`pin` and lock file maintenance updates, not just minor and patch) and
+`:automergeDigest`, and `hugoh/hk-config//presets/hk-pins` (how to read the hk
+pins). `default.json` and
 go-tools' `go-renovaterc.json` extend it and add their own ecosystem rules and
 groups on top.
 
