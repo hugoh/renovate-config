@@ -29,26 +29,10 @@
       "extends": ["local>hugoh/renovate-config//presets/weekend"]
     },
     {
-      "description": "Tooling gets its own weekly group instead of the generic ones: a group only automerges when every member does, and tooling automerges (presets/automerge) while the code the project ships doesn't (minors). Same window as the generic groups. Majors stay ungrouped. Must stay below the generic minor/patch rules (their groupName would replace it) and above the first-party and linters rules below, whose groupName must win. The matchers mirror presets/automerge; scripts/check-package-rules.mjs fails if a group mixes automerging and manual members.",
-      "matchManagers": ["github-actions", "mise", "copier", "pre-commit"],
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "groupName": "tool updates",
-      "extends": ["local>hugoh/renovate-config//presets/weekend"]
-    },
-    {
-      "description": "The hk pins (custom.regex) are tooling too. Only reached in the hk-config repo, where the linters rule below skips them; elsewhere that rule overrides this group.",
-      "matchManagers": ["custom.regex"],
-      "matchPackageNames": ["jdx/hk", "hugoh/hk-config"],
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "groupName": "tool updates",
-      "extends": ["local>hugoh/renovate-config//presets/weekend"]
-    },
-    {
-      "description": "Own group for minor/patch/pin/digest updates of my packages. A group is one branch with one schedule, so a consumer's hugoh/** schedule override (e.g. daily) needs a group of its own, not the generic ones, which would end up with mixed schedules. Automerges (1-day soak, mine) so the group never mixes actions with other first-party packages. Majors stay ungrouped. Must stay below the generic minor/patch rules (their groupName would replace it) and above the hk and first-party core rules below, whose groupName must win.",
+      "description": "Own group for minor/patch/pin/digest updates of my packages. A group is one branch with one schedule, so a consumer's hugoh/** schedule override (e.g. daily) needs a group of its own, not the generic ones, which would end up with mixed schedules. Majors stay ungrouped. Must stay below the generic minor/patch rules (their groupName would replace it) and above the hk and first-party core rules below, whose groupName must win.",
       "matchPackageNames": ["hugoh/**"],
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "groupName": "first-party updates",
-      "automerge": true
+      "groupName": "first-party updates"
     },
     {
       "description": "hk and hk-config move together in the linters PR and its first-weekend window: a release of either can change checks and fail CI, and hk-config needs a minimum hk version. Separate from the linters rule below, which only sees the mise manager in mise.toml, while these pins are read by custom managers (hk.pkl, mise.toml). Skipped in the hk-config repo, where hk is part of the project, not a linter: it stays in the generic groups. Both get the 7-day soak: updates join the branch as each matures, so a shorter hk-config soak could land it without the hk it needs. A consumer overriding the schedule of hugoh/** must exclude hugoh/hk-config, or the group gets mixed schedules.",

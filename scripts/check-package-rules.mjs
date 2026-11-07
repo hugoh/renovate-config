@@ -147,7 +147,7 @@ const cases = [
   [
     "jdx/hk in the hk-config repo is not a linter",
     { ...update("jdx/hk", "github-releases", "minor"), repository: "hugoh/hk-config" },
-    "tool updates",
+    "minor updates",
   ],
   [
     "jdx/hk in another repo",
@@ -210,12 +210,12 @@ const cases = [
       "ruff",
       "dotfiles/dot_config/mise/exact_conf.d/10-tools.toml.tmpl",
     ),
-    "tool updates",
+    "patch updates",
   ],
   [
     "non-linter mise tool",
     update("uv", "github-releases", "patch", "mise", "uv"),
-    "tool updates",
+    "patch updates",
   ],
   [
     "linter major update stays ungrouped",
@@ -274,22 +274,6 @@ const cases = [
     },
     "first-party updates",
   ],
-  // Tooling has its own group (so it can automerge); GitHub Actions too.
-  [
-    "github-actions minor",
-    update("actions/checkout", "github-tags", "minor", "github-actions"),
-    "tool updates",
-  ],
-  [
-    "github-actions digest",
-    update("actions/checkout", "github-tags", "digest", "github-actions"),
-    "tool updates",
-  ],
-  [
-    "github-actions major stays ungrouped",
-    update("actions/checkout", "github-tags", "major", "github-actions"),
-    undefined,
-  ],
   // Controls: the generic groups must still apply to everything else.
   [
     "other custom.regex minor",
@@ -329,9 +313,9 @@ for (const [name, input, expected] of overrideCases) {
   );
 }
 // Automerge (presets/automerge): tooling merges at every update type, majors
-// included; everything else only patches. A group automerges only when every
-// member does, so no group may mix the two kinds: record each case's group and
-// automerge flag here and in the cases above, then check them together.
+// included; everything else merges minors and patches. A group automerges only
+// when every member does, so check that no group mixes the two: record each
+// case's group and automerge flag here and in the cases above.
 const groups = new Map();
 function track(name, out) {
   if (out.groupName === undefined) return;
@@ -356,16 +340,14 @@ const automergeCases = [
   ["biome schema major", update("@biomejs/biome", "npm", "major", "custom.jsonata", "@biomejs/biome", "biome.json"), true],
   ["biome mise pin major", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), true],
   ["cargo patch", cargo("patch"), true],
-  ["cargo minor", cargo("minor"), false],
+  ["cargo minor", cargo("minor"), true],
   ["cargo major", cargo("major"), false],
-  ["gomod patch", gomod("patch"), true],
-  ["gomod minor", gomod("minor"), false],
+  ["gomod minor", gomod("minor"), true],
   ["gomod major", gomod("major"), false],
-  ["npm dependency patch", npmDep("patch"), true],
-  ["npm dependency minor", npmDep("minor"), false],
+  ["npm dependency minor", npmDep("minor"), true],
   ["npm dependency major", npmDep("major"), false],
-  ["CDN link (custom.regex) minor", update("example/lib", "npm", "minor", "custom.regex", "example/lib", "index.html"), false],
-  ["CDN link (custom.regex) patch", update("example/lib", "npm", "patch", "custom.regex", "example/lib", "index.html"), true],
+  ["CDN link (custom.regex) minor", update("example/lib", "npm", "minor", "custom.regex", "example/lib", "index.html"), true],
+  ["CDN link (custom.regex) major", update("example/lib", "npm", "major", "custom.regex", "example/lib", "index.html"), false],
   ["first-party minor", update("hugoh/TeamsControl.spoon", "github-releases", "minor"), true],
   ["first-party major", update("hugoh/TeamsControl.spoon", "github-releases", "major"), false],
 ];
@@ -377,8 +359,7 @@ for (const [name, input, expected] of automergeCases) {
   console.log(`${ok ? "ok  " : "FAIL"} automerge ${name}: ${Boolean(out.automerge)} (want ${expected})`);
 }
 for (const [group, members] of groups) {
-  const values = new Set(members.values());
-  const ok = values.size === 1;
+  const ok = new Set(members.values()).size === 1;
   if (!ok) failed = true;
   console.log(
     `${ok ? "ok  " : "FAIL"} group "${group}" does not mix automerging and manual members${ok ? "" : `: ${JSON.stringify([...members])}`}`,
@@ -418,7 +399,6 @@ const saturdayEarly = resolveExtends({
 const scheduleCases = [
   ["minor schedule: weekend", update("example/other", "github-releases", "minor"), weekend],
   ["patch schedule: weekend", update("example/other", "github-releases", "patch"), weekend],
-  ["tool minor schedule: weekend", update("actions/checkout", "github-tags", "minor", "github-actions"), weekend],
   ["major schedule: monthly fallthrough", update("example/other", "github-releases", "major"), undefined],
   ["linters schedule: first weekend", update("typos", "github-releases", "patch", "mise", "typos"), monthlyWeekend],
   ["npm:renovate schedule: early Saturday", update("renovate", "npm", "patch", "mise", "npm:renovate"), saturdayEarly],

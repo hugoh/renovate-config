@@ -1,10 +1,15 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Who automerges. Tooling never ships in the artifact, so CI is the judge: every update type merges, majors included. Anything else (code the project ships: Go modules, crates, npm and PyPI dependencies, CDN links) automerges patches only; minors and majors wait for me, since 0.x minors are breaking and CI doesn't prove behaviour. Only `automerge` is set here, never a group or a schedule, so these rules can come before a hub's own groups without being overridden. A group only automerges when every member does, so each hub's groups must not mix the two kinds (scripts/check-package-rules.mjs checks that for default.json).",
+  "description": "Who automerges. Tooling never ships in the artifact, so CI is the judge: every update type merges, majors included. Everything else (code the project ships: Go modules, crates, npm and PyPI dependencies, CDN links) automerges minors and patches; majors wait for me. Only `automerge` is set here, never a group or a schedule, so these rules can come before a hub's own groups without being overridden. A group only automerges when every member does; groups here are minor/patch (or ungrouped majors), so none mixes the two kinds (scripts/check-package-rules.mjs checks it for default.json).",
   "packageRules": [
     {
       "description": "Tooling: GitHub Actions, mise tools, Copier template updates, pre-commit hooks. All update types, majors included.",
-      "matchManagers": ["github-actions", "mise", "copier", "pre-commit"],
+      "matchManagers": [
+        "github-actions",
+        "mise",
+        "copier",
+        "pre-commit"
+      ],
       "automerge": true
     },
     {
@@ -18,8 +23,11 @@
       "automerge": true
     },
     {
-      "description": "Everything else: patch updates only. Minors and majors stay manual.",
-      "matchUpdateTypes": ["patch"],
+      "description": "Everything else: minor and patch updates. Majors stay manual.",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "automerge": true
     }
   ]

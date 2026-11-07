@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Policy shared by every hub (renovate-config's default.json, go-tools' go-renovaterc): the timezone the schedule presets are evaluated in, the 7-day third-party release-age soak and the 1-day first-party one, the monthly window, vulnerability alerts (GitHub's and OSV's), automerge (tooling at every update type, everything else patch only: presets/automerge), and hugoh/hk-config//presets/hk-pins (how to read the hk pins). Hubs keep their ecosystem rules and groups on top of this.",
+  "description": "Policy shared by every hub (renovate-config's default.json, go-tools' go-renovaterc): the timezone the schedule presets are evaluated in, the 7-day third-party release-age soak and the 1-day first-party one, the monthly window, vulnerability alerts (GitHub's and OSV's), automerge (tooling at every update type, everything else minor and patch: presets/automerge), and hugoh/hk-config//presets/hk-pins (how to read the hk pins). Hubs keep their ecosystem rules and groups on top of this.",
   "timezone": "America/Chicago",
   "minimumReleaseAge": "7 days",
   "osvVulnerabilityAlerts": true,

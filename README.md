@@ -47,7 +47,7 @@ flowchart TD
 - **`github>hugoh/go-tools:go-renovaterc`** ([`go-renovaterc.json`][go],
   [repos that use it][go-users]): the Go repos. It does **not**
   extend `default.json`: it has its own groups (`GitHub Actions`,
-  `Go dependencies (patch)` and `(minor)`) and runs everything on the weekend window except majors.
+  `Go dependencies`) and runs everything on the weekend window except majors.
   The Go repos' `.renovaterc.json` is itself a Copier output that adds
   [`presets/binary`][go-binary] or [`presets/library`][go-library] and
   [`presets/copier-owned-files`][go-copier].
@@ -69,7 +69,7 @@ flowchart TD
 |---|---|
 | Any time | Vulnerability fixes (6-hour soak), `first-party core` in the repos that own it (12 hours), Go patch toolchain bumps in binary repos (1 day) |
 | Saturday before 5am | `renovate CLI` |
-| Weekend (Fri 5pm–Sun 5am) | `tool updates`, `minor updates`, `patch updates`, `first-party updates`; in the Go hub, everything but majors, including the go-tools template update |
+| Weekend (Fri 5pm–Sun 5am) | `minor updates`, `patch updates`, `first-party updates`; in the Go hub, everything but majors, including the go-tools template update |
 | First weekend of the month | Majors (tooling majors included: they automerge once CI is green), lock file maintenance, `linters` (with hk and hk-config), `biome toolchain`; go-tools' `dev tools` / `template dev tools` |
 | Repo-specific | chezmoi runs `hugoh/**` (except hk-config) daily and lock files weekly; go-tools keeps `golangci-lint` weekly |
 
@@ -120,10 +120,8 @@ rules explain most of the rule-order constraints below:
    day for `hugoh/**` (both from `presets/base`), and the monthly window
    (`presets/monthly-weekend`) for everything not overridden below (major
    updates).
-3. **Groups**: tooling (GitHub Actions, mise tools, Copier, pre-commit, the hk
-   pins) in `tool updates`; everything else's minor updates in `minor updates`
-   and its patch, pin and digest updates in `patch updates`. All use the
-   weekend window. Tooling is split out because of automerge (see below).
+3. **Groups**: all minor updates in one PR (`minor updates`); patch, pin and
+   digest updates in another (`patch updates`). Both use the weekend window.
 4. **First-party**: minor, patch, pin and digest updates of `hugoh/**` get
    their own group (`first-party updates`) so a consumer can give them a
    different schedule; the core packages (reusable workflows, composite
@@ -157,32 +155,31 @@ Repos that release from conventional commits need dependency bumps typed
 Much of what Renovate bumps here is tooling that never ships: GitHub Actions,
 mise tools (linters, `pinact`, `node` for the build, ...), Copier updates, the
 hk pins and the biome `$schema`. CI is the judge for those, so they automerge
-at **every** update type, majors included. Everything else is code the project
-ships (Go modules, crates, npm and PyPI dependencies, CDN links) and only
-**patches** automerge: a 0.x minor is a breaking change and CI doesn't prove
-behaviour. Digests (`:automergeDigest`), linters in `devDependencies`
-(`:automergeLinters`), `first-party core` and my own `hugoh/**` packages
-(`first-party updates`, 1-day soak) automerge as before.
-
-A group only automerges when **every** member does, so a group must not mix
-tooling with shipped code. That is why `tool updates` is a group of its own
-and why the Go hub splits `Go dependencies` into patch and minor groups. The
-`package-rules` step fails if one of default.json's groups mixes the two.
+at **every** update type, majors included. Everything else (Go modules,
+crates, npm and PyPI dependencies, CDN links) automerges minors and patches;
+its **majors** wait for me. Digests (`:automergeDigest`), `first-party core`
+and everything else that sets `automerge` itself are unchanged.
 
 The preset only sets `automerge`, never a group or a schedule, so it can sit in
 `presets/base` (before the hubs' own rules) without being overridden. Majors
 keep the monthly window and the 7-day soak; the only change is that a green
 tooling major no longer waits for me.
 
+A group only automerges when every member does. The groups here are minor and
+patch only (majors are ungrouped), so none mixes the two kinds; the
+`package-rules` step fails if one starts to.
+
 Things to know:
 
-- A manager that isn't listed is treated as shipped code: minors stay manual.
-  That includes `devDependencies` that shape the output (vite, postcss,
-  purgecss) and dev crates; add them to the preset's first rule or a repo's
-  own rule if their CI covers them.
+- The hk pins and the biome `$schema` are read by custom managers, so the
+  preset matches them by package name. Without that, the `biome toolchain`
+  group would mix an automerging mise pin with a manual `$schema`.
 - `hk` and `hk-config` majors are not grouped (the `linters` rule is minor and
   patch only). If an hk-config major needs a newer hk, its PR fails CI until
   the hk major has merged, then Renovate rebases it and it merges.
+- A repo whose tools are the product, not what builds it (chezmoi's global
+  mise files), should turn tooling majors off for those files in its own
+  rules.
 - Branch protection needs a required check (an aggregate "ci" job), or
   platform automerge merges before CI has run.
 
