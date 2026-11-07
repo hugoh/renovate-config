@@ -123,6 +123,10 @@ rules explain most of the rule-order constraints below:
    updates).
 3. **Groups**: every minor, patch, pin and digest update in one PR
    (`dependency updates`), on the weekend window. Majors are never grouped.
+   Minors and patches used to be two groups because they ran on different
+   schedules; with one window the split had no reason left. The cost: a red
+   update turns the whole weekly PR red, patches and digests included, until
+   it is fixed.
 4. **First-party**: minor, patch, pin and digest updates of `hugoh/**` get
    their own group (`first-party updates`) so a consumer can give them a
    different schedule; the core packages (reusable workflows, composite
@@ -172,9 +176,9 @@ shipped code stay on the monthly window, since I merge them by hand.
 The preset sets no groups, so it can sit in `presets/base` (before the hubs'
 own rules) without being overridden.
 
-A group only automerges when every member does. The groups here are minor and
-patch only (majors are ungrouped), so none mixes the two kinds; the
-`package-rules` step fails if one starts to.
+A group only automerges when every member does. Majors are the only updates
+that differ between tooling and shipped code, and they are ungrouped, so no
+group mixes the two kinds; the `package-rules` step fails if one starts to.
 
 Things to know:
 
@@ -296,11 +300,11 @@ Biome has a rule in `default.json` only for its lookup: the mise manager's own
 `github-tags` lookup finds no biome updates (the tags are named
 `@biomejs/biome@<version>`), so the pin looks up on npm like the `$schema` URL
 in `biome.json` does. Otherwise biome is tooling like the rest, with no group
-or schedule of its own: both members join the generic weekly groups by update
-type (or are ungrouped majors) and automerge. They can land in different PRs;
-biome only warns when the `$schema` version differs from the CLI's, and the
-other one follows within the same run. If that ever starts failing CI, group
-the two again.
+or schedule of its own: both members join `dependency updates` and land in the
+same weekly PR, and automerge. Majors are ungrouped, so a biome major can
+arrive as two PRs; biome only warns when the `$schema` version differs from
+the CLI's, and the other one follows within the same run. If that ever starts
+failing CI, group the two majors again.
 `scripts/check-package-rules.mjs` (the `package-rules` step in `hk.pkl`)
 enforces the rest: it resolves the presets from this checkout, runs the rules
 through Renovate's own matcher and fails if the generic groups, soaks or

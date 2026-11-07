@@ -373,8 +373,10 @@ for (const [name, packageName, datasource, expected] of soakCases) {
     `${ok ? "ok  " : "FAIL"} ${name}: minimumReleaseAge=${out.minimumReleaseAge} (want ${expected})`,
   );
 }
-// Minor and patch share the weekend window; major gets no rule-level schedule
-// and so falls through to the monthly window from presets/base.
+// Minor, patch, pin and digest share the weekend window; major gets no
+// rule-level schedule
+// and so falls through to the monthly window from presets/base (tooling
+// majors excepted, below).
 const weekend = resolveExtends({
   extends: ["local>hugoh/renovate-config//presets/weekend"],
 }).schedule;
@@ -493,7 +495,7 @@ if (base.timezone !== "America/Chicago") {
 }
 if (failed) {
   console.error(
-    "\nThe renovate CLI rule in default.json must stay below the generic minor/patch grouping rules.",
+    "\nThe renovate CLI rule in default.json must stay below the generic dependency updates rule.",
   );
   process.exit(1);
 }

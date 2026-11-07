@@ -25,13 +25,13 @@
       "extends": ["local>hugoh/renovate-config//presets/weekend"]
     },
     {
-      "description": "Own group for minor/patch/pin/digest updates of my packages. A group is one branch with one schedule, so a consumer's hugoh/** schedule override (e.g. daily) needs a group of its own, not the generic ones, which would end up with mixed schedules. Majors stay ungrouped. Must stay below the generic minor/patch rules (their groupName would replace it) and above the hk and first-party core rules below, whose groupName must win.",
+      "description": "Own group for minor/patch/pin/digest updates of my packages. A group is one branch with one schedule, so a consumer's hugoh/** schedule override (e.g. daily) needs a group of its own, not the generic one, which would end up with mixed schedules. Majors stay ungrouped. Must stay below the generic dependency updates rule (its groupName would replace it) and above the hk and first-party core rules below, whose groupName must win.",
       "matchPackageNames": ["hugoh/**"],
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "groupName": "first-party updates"
     },
     {
-      "description": "hk and hk-config move together in one weekly PR: a release of either can change checks and fail CI, and hk-config needs a minimum hk version. Read by custom managers (hk.pkl, mise.toml), which is why the generic rules alone would not pair them across update types. Skipped in the hk-config repo, where hk is part of the project: it stays in the generic groups. Both get the 7-day soak: updates join the branch as each matures, so a shorter hk-config soak could land it without the hk it needs. A consumer overriding the schedule of hugoh/** must exclude hugoh/hk-config, or the group gets mixed schedules.",
+      "description": "hk and hk-config move together in one weekly PR: a release of either can change checks and fail CI, and hk-config needs a minimum hk version. Read by custom managers (hk.pkl, mise.toml), which is why the generic rules alone would not pair them across update types. Skipped in the hk-config repo, where hk is part of the project: it stays in the generic group. Both get the 7-day soak: updates join the branch as each matures, so a shorter hk-config soak could land it without the hk it needs. A consumer overriding the schedule of hugoh/** must exclude hugoh/hk-config, or the group gets mixed schedules.",
       "matchPackageNames": ["jdx/hk", "hugoh/hk-config"],
       "matchManagers": ["custom.regex"],
       "matchUpdateTypes": ["minor", "patch"],
@@ -40,7 +40,7 @@
       "groupName": "hk"
     },
     {
-      "description": "First-party reusable workflows and composite actions: a bump only reaches consumers once a new tag is cut, so propagate within a day and automerge. Only in the repos that own them. Own groupName so the generic minor/patch groups don't impose their weekend schedule instead of \"at any time\".",
+      "description": "First-party reusable workflows and composite actions: a bump only reaches consumers once a new tag is cut, so propagate within a day and automerge. Only in the repos that own them. Own groupName so the generic dependency updates group doesn't impose its weekend schedule instead of \"at any time\".",
       "groupName": "first-party core",
       "matchManagers": ["github-actions"],
       "matchPackageNames": [
@@ -62,14 +62,14 @@
       "automerge": true
     },
     {
-      "description": "The renovate CLI ships several times a day: own group, Saturday-early window. presets/npm-renovate-debounce holds the same rule for go-tools; here it has to sit below the generic minor/patch rules, which would replace its group and schedule (a rule can't extend a preset that holds packageRules).",
+      "description": "The renovate CLI ships several times a day: own group, Saturday-early window. presets/npm-renovate-debounce holds the same rule for go-tools; here it has to sit below the generic dependency updates rule, which would replace its group and schedule (a rule can't extend a preset that holds packageRules).",
       "matchManagers": ["mise"],
       "matchDepNames": ["npm:renovate"],
       "groupName": "renovate CLI",
       "extends": ["local>hugoh/renovate-config//presets/saturday-early"]
     },
     {
-      "description": "Look both biome entries up on npm: the mise manager's github-tags lookup finds nothing for the pin, since the tags are named @biomejs/biome@<version>, while the $schema URL (biome.json, read by customManagers:biomeVersions) already uses npm. Nothing else is special: biome is tooling like the rest, so it joins the generic weekly groups and automerges. The pin and the $schema can land in different PRs (a patch next to a minor, or ungrouped majors); biome only warns on a mismatch until the other one merges.",
+      "description": "Look both biome entries up on npm: the mise manager's github-tags lookup finds nothing for the pin, since the tags are named @biomejs/biome@<version>, while the $schema URL (biome.json, read by customManagers:biomeVersions) already uses npm. Nothing else is special: biome is tooling like the rest, so it joins the generic dependency updates group and automerges. Pin and $schema land in the same weekly PR, except majors, which are ungrouped; biome only warns on a mismatch until the other one merges.",
       "matchDepNames": ["biome", "biomejs/biome", "@biomejs/biome"],
       "overrideDatasource": "npm",
       "overridePackageName": "@biomejs/biome"
