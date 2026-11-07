@@ -132,9 +132,6 @@ rules explain most of the rule-order constraints below:
 5. **`linters`** and **`renovate CLI`**: below the generic groups so they win
    over them, with the linters on the monthly window and the renovate CLI on
    `presets/saturday-early` (see below).
-6. **`biome toolchain`**: last, so it wins over the generic groups. It only
-   pairs the biome pin and `$schema` in one PR; the window is the weekend
-   one, like the rest of the tooling (see below).
 
 A consuming repo's own `packageRules` come after all of this, so they can
 override any of it.
@@ -180,8 +177,8 @@ patch only (majors are ungrouped), so none mixes the two kinds; the
 Things to know:
 
 - The hk pins and the biome `$schema` are read by custom managers, so the
-  preset matches them by package name. Without that, the `biome toolchain`
-  group would mix an automerging mise pin with a manual `$schema`.
+  preset matches them by package name. Without that, a biome major would
+  merge itself in `mise.toml` and wait for me in `biome.json`.
 - `hk` and `hk-config` majors are not grouped (the `linters` rule is minor and
   patch only). If an hk-config major needs a newer hk, its PR fails CI until
   the hk major has merged, then Renovate rebases it and it merges.
@@ -284,15 +281,14 @@ dependency-specific group must come after them.
 The `linters` group is one of these: the pinned linters in the repo-root
 `mise.toml` move monthly, in one PR, on `presets/monthly-weekend`. It needs its
 own `groupName` (a group whose members have different schedules ends up on the
-wrong one) and has to sit below the generic groups and above `biome toolchain`.
+wrong one) and has to sit below the generic groups.
 Its tool list is the tools behind hk-config's `base.pkl` steps, plus linters
 only some repos run (`editorconfig-checker`, `pypi:ansible-lint`, `checkov`,
 `swiftlint`). `base.pkl`'s `stepTools` maps each hk step to the mise
 tool behind it, and `scripts/check-package-rules.mjs` evaluates it from the
 hk-config version pinned in `hk.pkl` (or the `base.pkl` named by
 `HK_CONFIG_BASE_PKL`, to try an unreleased hk-config) and fails when a tool is
-in neither the `linters` rule nor the script's exclusions (biome and
-`npm:renovate` have their own groups, tofu and trivy stay weekly), or when the
+in neither the `linters` rule nor the script's exclusions (`npm:renovate` has its own group, biome, tofu and trivy stay weekly), or when the
 rule lists a tool hk-config no longer runs. Since the check also runs when
 Renovate bumps the hk-config pin, a new linter shows up as a failing PR rather
 than as a tool that quietly stays weekly.
@@ -302,23 +298,19 @@ as `npm-renovate-debounce`'s) would come before the generic groups, which would
 replace its group and schedule, so `default.json` has its own `renovate CLI`
 rule below them.
 
-The `biome toolchain` group (an inline rule in `default.json`) is such a group
-(and it also looks both biome entries up on npm, because the mise manager's own
-`github-tags` lookup finds no biome updates):
-the `biome` pin in `mise.toml` and the `$schema` URL in
-`biome.json` are read by different managers, so without a shared group one can
-land a release before the other and biome reports a schema/CLI version
-mismatch. Its matcher is the last rule in `default.json`. Biome is tooling like
-the rest, so the group sets no schedule of its own: every update type gets
-the weekend window from the generic groups and `presets/automerge`, for both
-members, so the pin and the `$schema` always move in the same window. The
-group stays a PR of its own (not folded into the generic `minor updates` /
-`patch updates` groups) because the two members must land together even when
-their current versions differ, and a red biome PR then holds back only biome.
+Biome has a rule in `default.json` only for its lookup: the mise manager's own
+`github-tags` lookup finds no biome updates (the tags are named
+`@biomejs/biome@<version>`), so the pin looks up on npm like the `$schema` URL
+in `biome.json` does. Otherwise biome is tooling like the rest, with no group
+or schedule of its own: both members join the generic weekly groups by update
+type (or are ungrouped majors) and automerge. They can land in different PRs;
+biome only warns when the `$schema` version differs from the CLI's, and the
+other one follows within the same run. If that ever starts failing CI, group
+the two again.
 `scripts/check-package-rules.mjs` (the `package-rules` step in `hk.pkl`)
-enforces this: it resolves the presets from this checkout, runs the rules
-through Renovate's own matcher and fails if the biome pins stop sharing the
-group or window, or if the generic groups, soaks or schedules change.
+enforces the rest: it resolves the presets from this checkout, runs the rules
+through Renovate's own matcher and fails if the generic groups, soaks or
+schedules change.
 
 ### The hk pins
 

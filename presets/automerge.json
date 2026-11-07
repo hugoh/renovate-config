@@ -13,7 +13,7 @@
       "automerge": true
     },
     {
-      "description": "Tooling read by custom managers rather than the ones above: the hk and hk-config pins (hugoh/hk-config//presets/hk-pins) and the biome $schema URL (customManagers:biomeVersions, and go-tools' template), which has to move with the mise pin. Without this the biome toolchain group would mix an automerging member with a manual one and never merge.",
+      "description": "Tooling read by custom managers rather than the ones above: the hk and hk-config pins (hugoh/hk-config//presets/hk-pins) and the biome $schema URL (customManagers:biomeVersions, and go-tools' template). Without this a biome major would merge itself in mise.toml and wait for me in biome.json.",
       "matchPackageNames": [
         "jdx/hk",
         "hugoh/hk-config",
@@ -38,7 +38,7 @@
       ]
     },
     {
-      "description": "Same for the pins that custom managers read: hk, hk-config and the biome $schema (the biome toolchain group's pin and $schema must share a window).",
+      "description": "Same for the pins that custom managers read: hk, hk-config and the biome $schema, so they share the weekend window with the mise pin.",
       "matchPackageNames": [
         "jdx/hk",
         "hugoh/hk-config",

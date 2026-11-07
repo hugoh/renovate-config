@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Regression check for default.json's packageRules (see README: "Rule order
 // matters"). Runs them through Renovate's own rule matcher for synthetic
-// updates and fails if the policy changes: the biome toolchain group (which
+// updates and fails if the policy changes: the linters group (which
 // must stay below the generic "minor updates" / "patch updates" rules, or
 // their groupName replaces it), the generic groups themselves, the
 // first-party / third-party soak, the schedules, and who automerges.
@@ -159,27 +159,27 @@ const cases = [
     update("hugoh/hk-config", "github-tags", "major"),
     undefined,
   ],
-  // biome: the $schema URL (custom.regex) and the mise.toml pin (mise) must
-  // land in one group, or the CLI drifts from the schema.
+  // biome is tooling like the rest: its $schema URL (custom.regex) and its
+  // mise.toml pin join the generic groups by update type, no group of their own.
   [
     "biome schema patch",
     update("biomejs/biome", "github-releases", "patch"),
-    "biome toolchain",
+    "patch updates",
   ],
   [
     "biome schema minor",
     update("biomejs/biome", "github-releases", "minor"),
-    "biome toolchain",
+    "minor updates",
   ],
   [
     "biome mise pin patch",
     update("biomejs/biome", "github-releases", "patch", "mise", "biome"),
-    "biome toolchain",
+    "patch updates",
   ],
   [
     "biome mise pin minor",
     update("biomejs/biome", "github-releases", "minor", "mise", "biome"),
-    "biome toolchain",
+    "minor updates",
   ],
   // Linters in the repo's own mise.toml move in their own monthly group; the
   // same tools in other files (config's global tools) stay in the weekly ones.
@@ -401,7 +401,7 @@ const scheduleCases = [
   ["patch schedule: weekend", update("example/other", "github-releases", "patch"), weekend],
   ["major schedule: monthly fallthrough", update("example/other", "github-releases", "major"), undefined],
   // Tooling majors automerge, so they take the weekend window; shipped code's
-  // majors (manual) stay on the monthly one. biome's group keeps its own.
+  // majors (manual) stay on the monthly one.
   ["tool major schedule: weekend (mise)", update("pinact", "github-releases", "major", "mise", "pinact"), weekend],
   ["tool major schedule: weekend (actions)", update("actions/checkout", "github-tags", "major", "github-actions"), weekend],
   ["hk major schedule: weekend", update("jdx/hk", "github-releases", "major"), weekend],
@@ -409,8 +409,8 @@ const scheduleCases = [
   ["cargo major schedule: monthly fallthrough", update("tokio", "crate", "major", "cargo", "tokio", "Cargo.toml"), undefined],
   ["linters schedule: first weekend", update("typos", "github-releases", "patch", "mise", "typos"), monthlyWeekend],
   ["npm:renovate schedule: early Saturday", update("renovate", "npm", "patch", "mise", "npm:renovate"), saturdayEarly],
-  // The biome toolchain is a linter too: pin and $schema share one group, so
-  // they must share its window. Majors are included, they don't fall through.
+  // Biome is tooling like the rest: weekend for every update type, pin and
+  // $schema alike.
   ["biome mise pin schedule: weekend", update("@biomejs/biome", "npm", "patch", "mise", "biome", "mise.toml"), weekend],
   ["biome mise pin minor schedule: weekend", update("@biomejs/biome", "npm", "minor", "mise", "biome", "mise.toml"), weekend],
   ["jdx/hk schedule: first weekend", update("jdx/hk", "github-releases", "minor"), monthlyWeekend],
@@ -477,7 +477,7 @@ for (const [name, actual] of [
 // deliberately not in it must say why; a tool in neither place is a new step
 // nobody classified, and a listed tool hk-config no longer runs is stale.
 const EXCLUDED = {
-  biome: "own group (biome toolchain)",
+  biome: "tooling like the rest: generic weekly groups",
   "npm:renovate": "own group (renovate CLI)",
   tofu: "infrastructure tool, not a linter",
   trivy: "security scanner, stays on the weekly groups",
@@ -559,7 +559,7 @@ if (base.timezone !== "America/Chicago") {
 }
 if (failed) {
   console.error(
-    "\nThe biome toolchain rule in default.json must stay below the generic minor/patch grouping rules.",
+    "\nThe linters and renovate CLI rules in default.json must stay below the generic minor/patch grouping rules.",
   );
   process.exit(1);
 }

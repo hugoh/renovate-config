@@ -104,9 +104,8 @@
       "extends": ["local>hugoh/renovate-config//presets/saturday-early"]
     },
     {
-      "description": "The biome CLI pin (mise.toml) and the $schema URL (biome.json, read by customManagers:biomeVersions) come from different managers; one group moves them in one PR so the CLI doesn't lag the schema (biome warns on a mismatch). Both look up on npm: the mise manager's github-tags lookup finds nothing, since the tags are named @biomejs/biome@<version>. Biome is tooling like the rest, so no schedule of its own: it keeps the weekend window the generic groups and presets/automerge give each update type; the group is only here to pair the two members. Must stay below the generic minor/patch rules, or their groupName replaces it (later rules win); scripts/check-package-rules.mjs enforces it.",
+      "description": "Look both biome entries up on npm: the mise manager's github-tags lookup finds nothing for the pin, since the tags are named @biomejs/biome@<version>, while the $schema URL (biome.json, read by customManagers:biomeVersions) already uses npm. Nothing else is special: biome is tooling like the rest, so it joins the generic weekly groups and automerges. The pin and the $schema can land in different PRs (a patch next to a minor, or ungrouped majors); biome only warns on a mismatch until the other one merges.",
       "matchDepNames": ["biome", "biomejs/biome", "@biomejs/biome"],
-      "groupName": "biome toolchain",
       "overrideDatasource": "npm",
       "overridePackageName": "@biomejs/biome"
     }
