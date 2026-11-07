@@ -70,7 +70,8 @@ flowchart TD
 | Any time | Vulnerability fixes (6-hour soak), `first-party core` in the repos that own it (12 hours), Go patch toolchain bumps in binary repos (1 day) |
 | Saturday before 5am | `renovate CLI` |
 | Weekend (Fri 5pm–Sun 5am) | `minor updates`, `patch updates`, `first-party updates`; in the Go hub, everything but majors, including the go-tools template update |
-| First weekend of the month | Majors, lock file maintenance, `linters` (with hk and hk-config), `biome toolchain`; go-tools' `dev tools` / `template dev tools` |
+| Weekend (Fri 5pm–Sun 5am) | …plus tooling majors (GitHub Actions, mise, Copier, pre-commit, the hk pins), which automerge once CI is green |
+| First weekend of the month | Majors of shipped code, lock file maintenance; go-tools' `dev tools` / `template dev tools` |
 | Repo-specific | chezmoi runs `hugoh/**` (except hk-config) daily and lock files weekly; go-tools keeps `golangci-lint` weekly |
 
 Soaks: 7 days for third parties (`presets/base`), 1 day for `hugoh/**`
@@ -126,13 +127,11 @@ rules explain most of the rule-order constraints below:
    their own group (`first-party updates`) so a consumer can give them a
    different schedule; the core packages (reusable workflows, composite
    actions, shared tooling) propagate within a day and automerge (`first-party
-   core`). The exception is the `hugoh/hk-config` pin (`linters`, monthly, see
+   core`). The exception is the `hugoh/hk-config` pin (`hk`, with `jdx/hk`, see
    "The hk pins").
-5. **`linters`** and **`renovate CLI`**: below the generic groups so they win
-   over them, with the linters on the monthly window and the renovate CLI on
+5. **`hk`** and **`renovate CLI`**: below the generic groups so they win over
+   them: `jdx/hk` and `hugoh/hk-config` in one PR, and the renovate CLI on
    `presets/saturday-early` (see below).
-6. **`biome toolchain`**: last, so it wins over the generic groups, on the same
-   monthly window as the linters (see below).
 
 A consuming repo's own `packageRules` come after all of this, so they can
 override any of it.
@@ -149,6 +148,47 @@ Repos that release from conventional commits need dependency bumps typed
   the published `action.yml` is `fix`. For composite-action repos
   (`cog-bump`, `digest-action`, `rerun-transient-failures`,
   `checkly-config`).
+
+### Who automerges (`presets/automerge`)
+
+Much of what Renovate bumps here is tooling that never ships: GitHub Actions,
+mise tools (linters, `pinact`, `node` for the build, ...), Copier updates, the
+hk pins and the biome `$schema`. CI is the judge for those, so they automerge
+at **every** update type, majors included. Everything else (Go modules,
+crates, npm and PyPI dependencies, CDN links) keeps what `:automergeMinor`
+(`presets/base`) already merges: minors, patches, pins and lock file
+maintenance; its **majors** wait for me. Digests (`:automergeDigest`),
+`first-party core` and everything else that sets `automerge` itself are
+unchanged.
+
+Tooling majors also take the weekend window instead of waiting for the first
+weekend of the month: with automerge there is no pile to triage, and repos
+drift less. The soak stays at 7 days (longer buys little: compromises and bad
+releases surface within days, and CI is the real gate). The renovate CLI keeps
+its own window; biome is on the weekend window too. The Go hub's catch-all
+major rule skips these managers so they keep the weekend window. Majors of
+shipped code stay on the monthly window, since I merge them by hand.
+
+The preset sets no groups, so it can sit in `presets/base` (before the hubs'
+own rules) without being overridden.
+
+A group only automerges when every member does. The groups here are minor and
+patch only (majors are ungrouped), so none mixes the two kinds; the
+`package-rules` step fails if one starts to.
+
+Things to know:
+
+- The hk pins and the biome `$schema` are read by custom managers, so the
+  preset matches them by package name. Without that, a biome major would
+  merge itself in `mise.toml` and wait for me in `biome.json`.
+- `hk` and `hk-config` majors are not grouped (the `hk` rule is minor and
+  patch only). If an hk-config major needs a newer hk, its PR fails CI until
+  the hk major has merged, then Renovate rebases it and it merges.
+- A repo whose tools are the product, not what builds it (chezmoi's global
+  mise files), should turn tooling majors off for those files in its own
+  rules.
+- Branch protection needs a required check (an aggregate "ci" job), or
+  platform automerge merges before CI has run.
 
 ### `presets/weekend`
 
@@ -209,9 +249,11 @@ Policy every hub shares, so it is defined once: the timezone the schedule
 presets are evaluated in (`America/Chicago`), the 7-day third-party
 `minimumReleaseAge` and the 1-day one for `hugoh/**`
 (`presets/first-party-soak`), `presets/monthly-weekend`,
-`presets/vulnerability-alerts` plus OSV alerts, Renovate's `:automergeLinters`,
-`:automergeMinor` and `:automergeDigest`, and `hugoh/hk-config//presets/hk-pins`
-(how to read the hk pins). `default.json` and
+`presets/vulnerability-alerts` plus OSV alerts, `presets/automerge`,
+Renovate's `:automergeLinters`, `:automergeMinor` (keep it: it is what merges
+`pin` and lock file maintenance updates, not just minor and patch) and
+`:automergeDigest`, and `hugoh/hk-config//presets/hk-pins` (how to read the hk
+pins). `default.json` and
 go-tools' `go-renovaterc.json` extend it and add their own ecosystem rules and
 groups on top.
 
@@ -240,53 +282,39 @@ for each field. A hub's own rules come after everything pulled in through
 override the `groupName` of any group rule above them. That is why a
 dependency-specific group must come after them.
 
-The `linters` group is one of these: the pinned linters in the repo-root
-`mise.toml` move monthly, in one PR, on `presets/monthly-weekend`. It needs its
-own `groupName` (a group whose members have different schedules ends up on the
-wrong one) and has to sit below the generic groups and above `biome toolchain`.
-Its tool list is the tools behind hk-config's `base.pkl` steps, plus linters
-only some repos run (`editorconfig-checker`, `pypi:ansible-lint`, `checkov`,
-`swiftlint`). `base.pkl`'s `stepTools` maps each hk step to the mise
-tool behind it, and `scripts/check-package-rules.mjs` evaluates it from the
-hk-config version pinned in `hk.pkl` (or the `base.pkl` named by
-`HK_CONFIG_BASE_PKL`, to try an unreleased hk-config) and fails when a tool is
-in neither the `linters` rule nor the script's exclusions (biome and
-`npm:renovate` have their own groups, tofu and trivy stay weekly), or when the
-rule lists a tool hk-config no longer runs. Since the check also runs when
-Renovate bumps the hk-config pin, a new linter shows up as a failing PR rather
-than as a tool that quietly stays weekly.
+The `hk` group is one of these (it needs its own `groupName`, which has to sit
+below the generic groups). Linters themselves have no rule: a pinned linter is
+tooling like the rest and joins the generic weekly groups, so there is no tool
+list to keep in sync with hk-config.
 
 `npm:renovate` has the same problem: a rule pulled in through `extends` (such
 as `npm-renovate-debounce`'s) would come before the generic groups, which would
 replace its group and schedule, so `default.json` has its own `renovate CLI`
 rule below them.
 
-The `biome toolchain` group (an inline rule in `default.json`) is such a group
-(and it also looks both biome entries up on npm, because the mise manager's own
-`github-tags` lookup finds no biome updates):
-the `biome` pin in `mise.toml` and the `$schema` URL in
-`biome.json` are read by different managers, so without a shared group one can
-land a release before the other and biome reports a schema/CLI version
-mismatch. Its matcher is the last rule in `default.json`. Biome is a linter and
-formatter, so the group follows the linters onto `presets/monthly-weekend`
-(majors included, where they would otherwise be the one major that landed
-weekly): a release that adds a rule or reformats code can fail CI, and a month
-of batching keeps that to one PR. The schedule is the group's, so the pin and
-the `$schema` always move in the same window.
+Biome has a rule in `default.json` only for its lookup: the mise manager's own
+`github-tags` lookup finds no biome updates (the tags are named
+`@biomejs/biome@<version>`), so the pin looks up on npm like the `$schema` URL
+in `biome.json` does. Otherwise biome is tooling like the rest, with no group
+or schedule of its own: both members join the generic weekly groups by update
+type (or are ungrouped majors) and automerge. They can land in different PRs;
+biome only warns when the `$schema` version differs from the CLI's, and the
+other one follows within the same run. If that ever starts failing CI, group
+the two again.
 `scripts/check-package-rules.mjs` (the `package-rules` step in `hk.pkl`)
-enforces this: it resolves the presets from this checkout, runs the rules
-through Renovate's own matcher and fails if the biome pins stop sharing the
-group or window, or if the generic groups, soaks or schedules change.
+enforces the rest: it resolves the presets from this checkout, runs the rules
+through Renovate's own matcher and fails if the generic groups, soaks or
+schedules change.
 
 ### The hk pins
 
 `hugoh/hk-config//presets/hk-pins` (through `presets/base`) teaches Renovate how
 to read the `jdx/hk` and `hugoh/hk-config` pins: custom managers for `.pkl`
 and `mise.toml`, and disabling the built-in `mise` manager for `hk`. They are
-moved in one go: `jdx/hk` and `hugoh/hk-config` both join the `linters`
-group and its first-weekend window, with the 7-day soak (hk-config's own
-1-day soak would let it mature before the hk it needs), since a release of
-either can fail CI like a linter release and hk-config needs a minimum hk
-(`min_hk_version`; see hk-config's README). Not in the hk-config repo itself,
-where hk is part of the project rather than a tool it lints with: there
+moved in one go: `jdx/hk` and `hugoh/hk-config` both join the `hk` group
+on the weekend window, with the 7-day soak (hk-config's own 1-day soak would
+let it mature before the hk it needs), since a release of either can fail CI
+and hk-config needs a minimum hk (`min_hk_version`; see hk-config's README).
+Not in the hk-config repo itself, where hk is part of the project rather than
+a tool it lints with: there
 `jdx/hk` stays in the generic groups.

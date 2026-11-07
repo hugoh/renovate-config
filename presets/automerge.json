@@ -1,0 +1,38 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Who automerges, on top of :automergeMinor (presets/base), which merges minor, patch, pin and lock file maintenance updates of everything. Tooling never ships in the artifact, so CI is the judge: every update type merges, majors included. Everything else (code the project ships: Go modules, crates, npm and PyPI dependencies, CDN links) keeps :automergeMinor's scope; its majors wait for me. Tooling majors also get the weekend window (they would otherwise wait for the first weekend of the month). No groups are set here, so these rules can come before a hub's own groups without being overridden. A group only automerges when every member does; groups here are minor/patch (or ungrouped majors), so none mixes the two kinds (scripts/check-package-rules.mjs checks it for default.json).",
+  "packageRules": [
+    {
+      "description": "Tooling: GitHub Actions, mise tools, Copier template updates, pre-commit hooks. All update types, majors included.",
+      "matchManagers": ["github-actions", "mise", "copier", "pre-commit"],
+      "automerge": true
+    },
+    {
+      "description": "Tooling read by custom managers rather than the ones above: the hk and hk-config pins (hugoh/hk-config//presets/hk-pins) and the biome $schema URL (customManagers:biomeVersions, and go-tools' template). Without this a biome major would merge itself in mise.toml and wait for me in biome.json.",
+      "matchPackageNames": [
+        "jdx/hk",
+        "hugoh/hk-config",
+        "@biomejs/biome",
+        "biomejs/biome"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Tooling majors land on the weekend window instead of waiting for the first weekend of the month: they automerge once CI is green, so there is no pile to triage, and repos drift less. Same 7-day soak. The renovate CLI keeps its own window, set by default.json's later rule.",
+      "matchManagers": ["github-actions", "mise", "copier", "pre-commit"],
+      "matchUpdateTypes": ["major"],
+      "extends": ["local>hugoh/renovate-config//presets/weekend"]
+    },
+    {
+      "description": "Same for the pins that custom managers read: hk, hk-config and the biome $schema, so they share the weekend window with the mise pin.",
+      "matchPackageNames": [
+        "jdx/hk",
+        "hugoh/hk-config",
+        "@biomejs/biome",
+        "biomejs/biome"
+      ],
+      "matchUpdateTypes": ["major"],
+      "extends": ["local>hugoh/renovate-config//presets/weekend"]
+    }
+  ]
+}

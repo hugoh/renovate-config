@@ -1,18 +1,13 @@
 #!/usr/bin/env node
 // Regression check for default.json's packageRules (see README: "Rule order
 // matters"). Runs them through Renovate's own rule matcher for synthetic
-// updates and fails if the policy changes: the biome toolchain group (which
+// updates and fails if the policy changes: the renovate CLI group (which
 // must stay below the generic "minor updates" / "patch updates" rules, or
 // their groupName replaces it), the generic groups themselves, the
-// first-party / third-party soak, and the schedules.
+// first-party / third-party soak, the schedules, and who automerges.
 //
 // Presets under presets/ that a rule extends are resolved from this checkout,
 // the way Renovate merges them beneath the rule's own settings.
-//
-// It also checks that the `linters` rule covers every tool hk-config's
-// `stepTools` (base.pkl) maps a step to, so the two can't drift apart. That
-// reads the hk-config version pinned in hk.pkl through `pkl`; set
-// HK_CONFIG_BASE_PKL to a local base.pkl to check an unreleased hk-config.
 //
 // Everything is local: the rule order inside default.json is what decides the
 // outcome, because rules that come in through `extends` (hk-config's
@@ -65,8 +60,23 @@ function findRenovate() {
   return found;
 }
 
-const rules = join(findRenovate(), "dist", "util", "package-rules", "index.js");
+const renovateDir = findRenovate();
+const rules = join(renovateDir, "dist", "util", "package-rules", "index.js");
 const { applyPackageRules } = await import(rules);
+// Built-in presets are otherwise ignored here, but :automergeMinor decides who
+// automerges (it also covers pin and lock file maintenance), so model it from
+// Renovate's own definition: its per-update-type `automerge` blocks become
+// packageRules, in the position the preset has in the extends chain.
+const { presets: builtIn } = await import(
+  join(renovateDir, "dist", "config", "presets", "internal", "default.preset.js")
+);
+function builtInRules(name) {
+  const preset = builtIn[name.slice(1)];
+  if (!preset) return [];
+  return ["major", "minor", "patch", "pin", "digest", "lockFileMaintenance"]
+    .filter((type) => preset[type]?.automerge)
+    .map((type) => ({ matchUpdateTypes: [type], automerge: true }));
+}
 
 const presetsDir = join(here, "..", "presets");
 const OWN_PRESET =
@@ -91,6 +101,7 @@ function resolveExtends(rule) {
 // Rules inherited through the presets default.json extends come first in
 // Renovate's chain, so the generic groups below can override them. Mirror that.
 function ownPresetRules(reference) {
+  if (reference.startsWith(":automerge")) return builtInRules(reference);
   const match = OWN_PRESET.exec(reference);
   if (!match) return [];
   const preset = JSON.parse(
@@ -127,98 +138,71 @@ const update = (
 
 const cases = [
   // [description, update, expected groupName]
-  // jdx/hk and hk-config join the linters group, except jdx/hk in the
-  // hk-config repo, where it is part of the project (README: "The hk pins").
+  // jdx/hk and hk-config join the hk group, except jdx/hk in the hk-config
+  // repo, where it is part of the project (README: "The hk pins").
   [
     "jdx/hk minor",
     update("jdx/hk", "github-releases", "minor"),
-    "linters",
+    "hk",
   ],
   [
     "hk-config patch",
     update("hugoh/hk-config", "github-tags", "patch"),
-    "linters",
+    "hk",
   ],
   [
     "hk-config minor",
     update("hugoh/hk-config", "github-tags", "minor"),
-    "linters",
+    "hk",
   ],
   [
-    "jdx/hk in the hk-config repo is not a linter",
+    "jdx/hk in the hk-config repo is not paired",
     { ...update("jdx/hk", "github-releases", "minor"), repository: "hugoh/hk-config" },
     "minor updates",
   ],
   [
     "jdx/hk in another repo",
     { ...update("jdx/hk", "github-releases", "minor"), repository: "hugoh/config" },
-    "linters",
+    "hk",
   ],
   [
     "hk-config major stays ungrouped",
     update("hugoh/hk-config", "github-tags", "major"),
     undefined,
   ],
-  // biome: the $schema URL (custom.regex) and the mise.toml pin (mise) must
-  // land in one group, or the CLI drifts from the schema.
+  // biome is tooling like the rest: its $schema URL (custom.regex) and its
+  // mise.toml pin join the generic groups by update type, no group of their own.
   [
     "biome schema patch",
     update("biomejs/biome", "github-releases", "patch"),
-    "biome toolchain",
+    "patch updates",
   ],
   [
     "biome schema minor",
     update("biomejs/biome", "github-releases", "minor"),
-    "biome toolchain",
+    "minor updates",
   ],
   [
     "biome mise pin patch",
     update("biomejs/biome", "github-releases", "patch", "mise", "biome"),
-    "biome toolchain",
+    "patch updates",
   ],
   [
     "biome mise pin minor",
     update("biomejs/biome", "github-releases", "minor", "mise", "biome"),
-    "biome toolchain",
+    "minor updates",
   ],
-  // Linters in the repo's own mise.toml move in their own monthly group; the
-  // same tools in other files (config's global tools) stay in the weekly ones.
-  ...[
-    ["typos", "github-releases"],
-    ["rumdl", "github-releases"],
-    ["tombi", "github-releases"],
-    ["github:owenlamont/ryl", "github-releases"],
-    ["aqua:Kampfkarren/selene", "github-releases"],
-    ["aqua:anordal/shellharden", "github-releases"],
-    ["pypi:ansible-lint", "pypi"],
-    ["checkov", "github-releases"],
-    ["swiftlint", "github-releases"],
-  ].flatMap(([dep, datasource]) =>
-    ["patch", "minor"].map((updateType) => [
-      `${dep} ${updateType} in mise.toml`,
-      update(dep, datasource, updateType, "mise", dep),
-      "linters",
-    ]),
+  // Linters are tooling like the rest: no group of their own.
+  ...["typos", "rumdl", "tombi", "github:owenlamont/ryl", "pypi:ansible-lint"].flatMap(
+    (dep) =>
+      ["patch", "minor"].map((updateType) => [
+        `${dep} ${updateType} in mise.toml`,
+        update(dep, dep.startsWith("pypi:") ? "pypi" : "github-releases", updateType, "mise", dep),
+        updateType === "patch" ? "patch updates" : "minor updates",
+      ]),
   ),
   [
-    "linter in a global tools file",
-    update(
-      "ruff",
-      "github-releases",
-      "patch",
-      "mise",
-      "ruff",
-      "dotfiles/dot_config/mise/exact_conf.d/10-tools.toml.tmpl",
-    ),
-    "patch updates",
-  ],
-  [
-    "non-linter mise tool",
-    update("uv", "github-releases", "patch", "mise", "uv"),
-    "patch updates",
-  ],
-  [
-    "linter major update stays ungrouped",
+    "tooling major update stays ungrouped",
     update("pinact", "github-releases", "major", "mise", "pinact"),
     undefined,
   ],
@@ -312,6 +296,63 @@ for (const [name, input, expected] of overrideCases) {
     `${ok ? "ok  " : "FAIL"} ${name}: ${out.datasource} ${out.packageName}`,
   );
 }
+// Automerge (presets/automerge): tooling merges at every update type, majors
+// included; everything else merges minors and patches. A group automerges only
+// when every member does, so check that no group mixes the two: record each
+// case's group and automerge flag here and in the cases above.
+const groups = new Map();
+function track(name, out) {
+  if (out.groupName === undefined) return;
+  const seen = groups.get(out.groupName) ?? new Map();
+  seen.set(name, Boolean(out.automerge));
+  groups.set(out.groupName, seen);
+}
+for (const [name, input] of cases) track(name, await applyPackageRules(input));
+const gha = (type) => update("actions/checkout", "github-tags", type, "github-actions");
+const cargo = (type) => update("tokio", "crate", type, "cargo", "tokio", "Cargo.toml");
+const gomod = (type) => update("github.com/x/y", "go", type, "gomod", "github.com/x/y", "go.mod");
+const npmDep = (type) => update("he", "npm", type, "npm", "he", "package.json");
+const automergeCases = [
+  ["pinact major (mise)", update("pinact", "github-releases", "major", "mise", "pinact"), true],
+  ["node major (mise)", update("node", "node-version", "major", "mise", "node"), true],
+  ["github-actions major", gha("major"), true],
+  ["github-actions minor", gha("minor"), true],
+  ["copier major", update("https://github.com/hugoh/go-tools.git", "git-tags", "major", "copier", "go-tools", ".copier-answers.yml"), true],
+  ["pre-commit major", update("example/hook", "github-tags", "major", "pre-commit", "example/hook", ".pre-commit-config.yaml"), true],
+  ["jdx/hk major", update("jdx/hk", "github-releases", "major"), true],
+  ["hk-config major", update("hugoh/hk-config", "github-tags", "major"), true],
+  ["biome schema major", update("@biomejs/biome", "npm", "major", "custom.jsonata", "@biomejs/biome", "biome.json"), true],
+  ["biome mise pin major", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), true],
+  // :automergeMinor (presets/base) also covers pin and lock file maintenance.
+  // Do not drop it as "redundant": nothing else merges these.
+  ["lock file maintenance", update("tokio", "crate", "lockFileMaintenance", "cargo", "tokio", "Cargo.lock"), true],
+  ["cargo pin", cargo("pin"), true],
+  ["cargo patch", cargo("patch"), true],
+  ["cargo minor", cargo("minor"), true],
+  ["cargo major", cargo("major"), false],
+  ["gomod minor", gomod("minor"), true],
+  ["gomod major", gomod("major"), false],
+  ["npm dependency minor", npmDep("minor"), true],
+  ["npm dependency major", npmDep("major"), false],
+  ["CDN link (custom.regex) minor", update("example/lib", "npm", "minor", "custom.regex", "example/lib", "index.html"), true],
+  ["CDN link (custom.regex) major", update("example/lib", "npm", "major", "custom.regex", "example/lib", "index.html"), false],
+  ["first-party minor", update("hugoh/TeamsControl.spoon", "github-releases", "minor"), true],
+  ["first-party major", update("hugoh/TeamsControl.spoon", "github-releases", "major"), false],
+];
+for (const [name, input, expected] of automergeCases) {
+  const out = await applyPackageRules(input);
+  track(name, out);
+  const ok = Boolean(out.automerge) === expected;
+  if (!ok) failed = true;
+  console.log(`${ok ? "ok  " : "FAIL"} automerge ${name}: ${Boolean(out.automerge)} (want ${expected})`);
+}
+for (const [group, members] of groups) {
+  const ok = new Set(members.values()).size === 1;
+  if (!ok) failed = true;
+  console.log(
+    `${ok ? "ok  " : "FAIL"} group "${group}" does not mix automerging and manual members${ok ? "" : `: ${JSON.stringify([...members])}`}`,
+  );
+}
 // Soak and timezone come from the shared presets (presets/base and
 // presets/first-party-soak); make sure adopting them kept the policy intact.
 const base = resolveExtends(config);
@@ -347,17 +388,27 @@ const scheduleCases = [
   ["minor schedule: weekend", update("example/other", "github-releases", "minor"), weekend],
   ["patch schedule: weekend", update("example/other", "github-releases", "patch"), weekend],
   ["major schedule: monthly fallthrough", update("example/other", "github-releases", "major"), undefined],
-  ["linters schedule: first weekend", update("typos", "github-releases", "patch", "mise", "typos"), monthlyWeekend],
+  // Tooling majors automerge, so they take the weekend window; shipped code's
+  // majors (manual) stay on the monthly one.
+  ["tool major schedule: weekend (mise)", update("pinact", "github-releases", "major", "mise", "pinact"), weekend],
+  ["tool major schedule: weekend (actions)", update("actions/checkout", "github-tags", "major", "github-actions"), weekend],
+  ["hk major schedule: weekend", update("jdx/hk", "github-releases", "major"), weekend],
+  ["hk-config major schedule: weekend", update("hugoh/hk-config", "github-tags", "major"), weekend],
+  ["cargo major schedule: monthly fallthrough", update("tokio", "crate", "major", "cargo", "tokio", "Cargo.toml"), undefined],
+  ["linter schedule: weekend", update("typos", "github-releases", "patch", "mise", "typos"), weekend],
   ["npm:renovate schedule: early Saturday", update("renovate", "npm", "patch", "mise", "npm:renovate"), saturdayEarly],
-  // The biome toolchain is a linter too: pin and $schema share one group, so
-  // they must share its window. Majors are included, they don't fall through.
-  ["biome mise pin schedule: first weekend", update("@biomejs/biome", "npm", "patch", "mise", "biome", "mise.toml"), monthlyWeekend],
-  ["biome mise pin minor schedule: first weekend", update("@biomejs/biome", "npm", "minor", "mise", "biome", "mise.toml"), monthlyWeekend],
-  ["jdx/hk schedule: first weekend", update("jdx/hk", "github-releases", "minor"), monthlyWeekend],
-  ["hk-config patch schedule: first weekend", update("hugoh/hk-config", "github-tags", "patch"), monthlyWeekend],
-  ["hk-config minor schedule: first weekend", update("hugoh/hk-config", "github-tags", "minor"), monthlyWeekend],
-  ["biome schema schedule: first weekend", update("@biomejs/biome", "npm", "minor", "custom.jsonata", "@biomejs/biome", "biome.json"), monthlyWeekend],
-  ["biome major schedule: first weekend", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), monthlyWeekend],
+  // Biome is tooling like the rest: weekend for every update type, pin and
+  // $schema alike.
+  ["biome mise pin schedule: weekend", update("@biomejs/biome", "npm", "patch", "mise", "biome", "mise.toml"), weekend],
+  ["biome mise pin minor schedule: weekend", update("@biomejs/biome", "npm", "minor", "mise", "biome", "mise.toml"), weekend],
+  ["jdx/hk schedule: weekend", update("jdx/hk", "github-releases", "minor"), weekend],
+  ["hk-config patch schedule: weekend", update("hugoh/hk-config", "github-tags", "patch"), weekend],
+  ["hk-config minor schedule: weekend", update("hugoh/hk-config", "github-tags", "minor"), weekend],
+  ["biome schema schedule: weekend", update("@biomejs/biome", "npm", "minor", "custom.jsonata", "@biomejs/biome", "biome.json"), weekend],
+  // Biome is tooling like the rest: weekend for every update type. The group
+  // only pairs the pin and the $schema, so they share one window.
+  ["biome major schedule: weekend", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), weekend],
+  ["biome schema major schedule: weekend", update("@biomejs/biome", "npm", "major", "custom.jsonata", "@biomejs/biome", "biome.json"), weekend],
 ];
 for (const [name, input, expected] of scheduleCases) {
   const out = await applyPackageRules(input);
@@ -410,60 +461,6 @@ for (const [name, actual] of [
     `${ok ? "ok  " : "FAIL"} ${name}: monthly-weekend (got ${JSON.stringify(actual)})`,
   );
 }
-// The linters rule lists the tools behind hk-config's steps. Tools that are
-// deliberately not in it must say why; a tool in neither place is a new step
-// nobody classified, and a listed tool hk-config no longer runs is stale.
-const EXCLUDED = {
-  biome: "own group (biome toolchain)",
-  "npm:renovate": "own group (renovate CLI)",
-  tofu: "infrastructure tool, not a linter",
-  trivy: "security scanner, stays on the weekly groups",
-};
-const REPO_LOCAL = new Set([
-  "editorconfig-checker",
-  "pypi:ansible-lint",
-  "checkov",
-  "swiftlint",
-]);
-
-function stepTools() {
-  const source = process.env.HK_CONFIG_BASE_PKL;
-  const [expression, file] = source
-    ? ["stepTools", resolve(source)]
-    : ["Base.stepTools", join(here, "..", "hk.pkl")];
-  const json = `new JsonRenderer {}.renderValue(${expression})`;
-  try {
-    return JSON.parse(
-      execFileSync("pkl", ["eval", "-x", json, "-f", "plain", file], {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "pipe"],
-      }),
-    );
-  } catch (error) {
-    throw new Error(
-      `cannot read stepTools from ${file}: bump the hk-config pin in hk.pkl to a release that has it, or set HK_CONFIG_BASE_PKL\n${error.stderr ?? error.message}`,
-    );
-  }
-}
-
-const linters = new Set(
-  // Not just the first "linters" rule: the hk/hk-config rule shares the name.
-  config.packageRules.find(
-    (rule) => rule.groupName === "linters" && rule.matchDepNames,
-  )?.matchDepNames ?? [],
-);
-const hkTools = new Set(Object.values(stepTools()).filter(Boolean));
-const coverage = [
-  ["unclassified hk-config tools", [...hkTools].filter((t) => !linters.has(t) && !(t in EXCLUDED))],
-  ["linters entries hk-config no longer runs", [...linters].filter((t) => !hkTools.has(t) && !REPO_LOCAL.has(t))],
-  ["excluded tools that are also listed", Object.keys(EXCLUDED).filter((t) => linters.has(t))],
-  ["excluded tools hk-config no longer runs", Object.keys(EXCLUDED).filter((t) => !hkTools.has(t))],
-];
-for (const [name, tools] of coverage) {
-  const ok = tools.length === 0;
-  if (!ok) failed = true;
-  console.log(`${ok ? "ok  " : "FAIL"} ${name}: ${tools.join(", ") || "none"}`);
-}
 // The first-party core rule only applies where a repo owns the package it
 // consumes, so matchPackageNames and matchRepositories must list the same
 // repos; otherwise a package is either never fast-laned or fast-laned from a
@@ -496,7 +493,7 @@ if (base.timezone !== "America/Chicago") {
 }
 if (failed) {
   console.error(
-    "\nThe biome toolchain rule in default.json must stay below the generic minor/patch grouping rules.",
+    "\nThe renovate CLI rule in default.json must stay below the generic minor/patch grouping rules.",
   );
   process.exit(1);
 }
