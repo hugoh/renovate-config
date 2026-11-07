@@ -60,8 +60,23 @@ function findRenovate() {
   return found;
 }
 
-const rules = join(findRenovate(), "dist", "util", "package-rules", "index.js");
+const renovateDir = findRenovate();
+const rules = join(renovateDir, "dist", "util", "package-rules", "index.js");
 const { applyPackageRules } = await import(rules);
+// Built-in presets are otherwise ignored here, but :automergeMinor decides who
+// automerges (it also covers pin and lock file maintenance), so model it from
+// Renovate's own definition: its per-update-type `automerge` blocks become
+// packageRules, in the position the preset has in the extends chain.
+const { presets: builtIn } = await import(
+  join(renovateDir, "dist", "config", "presets", "internal", "default.preset.js")
+);
+function builtInRules(name) {
+  const preset = builtIn[name.slice(1)];
+  if (!preset) return [];
+  return ["major", "minor", "patch", "pin", "digest", "lockFileMaintenance"]
+    .filter((type) => preset[type]?.automerge)
+    .map((type) => ({ matchUpdateTypes: [type], automerge: true }));
+}
 
 const presetsDir = join(here, "..", "presets");
 const OWN_PRESET =
@@ -86,6 +101,7 @@ function resolveExtends(rule) {
 // Rules inherited through the presets default.json extends come first in
 // Renovate's chain, so the generic groups below can override them. Mirror that.
 function ownPresetRules(reference) {
+  if (reference.startsWith(":automerge")) return builtInRules(reference);
   const match = OWN_PRESET.exec(reference);
   if (!match) return [];
   const preset = JSON.parse(
@@ -307,6 +323,10 @@ const automergeCases = [
   ["hk-config major", update("hugoh/hk-config", "github-tags", "major"), true],
   ["biome schema major", update("@biomejs/biome", "npm", "major", "custom.jsonata", "@biomejs/biome", "biome.json"), true],
   ["biome mise pin major", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), true],
+  // :automergeMinor also covers pin and lock file maintenance; losing it once
+  // stopped lock file refreshes from merging.
+  ["lock file maintenance", update("tokio", "crate", "lockFileMaintenance", "cargo", "tokio", "Cargo.lock"), true],
+  ["cargo pin", cargo("pin"), true],
   ["cargo patch", cargo("patch"), true],
   ["cargo minor", cargo("minor"), true],
   ["cargo major", cargo("major"), false],

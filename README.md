@@ -155,9 +155,11 @@ Much of what Renovate bumps here is tooling that never ships: GitHub Actions,
 mise tools (linters, `pinact`, `node` for the build, ...), Copier updates, the
 hk pins and the biome `$schema`. CI is the judge for those, so they automerge
 at **every** update type, majors included. Everything else (Go modules,
-crates, npm and PyPI dependencies, CDN links) automerges minors and patches;
-its **majors** wait for me. Digests (`:automergeDigest`), `first-party core`
-and everything else that sets `automerge` itself are unchanged.
+crates, npm and PyPI dependencies, CDN links) keeps what `:automergeMinor`
+(`presets/base`) already merges: minors, patches, pins and lock file
+maintenance; its **majors** wait for me. Digests (`:automergeDigest`),
+`first-party core` and everything else that sets `automerge` itself are
+unchanged.
 
 Tooling majors also take the weekend window instead of waiting for the first
 weekend of the month: with automerge there is no pile to triage, and repos
@@ -248,7 +250,7 @@ presets are evaluated in (`America/Chicago`), the 7-day third-party
 `minimumReleaseAge` and the 1-day one for `hugoh/**`
 (`presets/first-party-soak`), `presets/monthly-weekend`,
 `presets/vulnerability-alerts` plus OSV alerts, `presets/automerge`,
-Renovate's `:automergeLinters` and `:automergeDigest`, and `hugoh/hk-config//presets/hk-pins`
+Renovate's `:automergeLinters`, `:automergeMinor` and `:automergeDigest`, and `hugoh/hk-config//presets/hk-pins`
 (how to read the hk pins). `default.json` and
 go-tools' `go-renovaterc.json` extend it and add their own ecosystem rules and
 groups on top.

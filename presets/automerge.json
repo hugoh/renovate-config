@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Who automerges. Tooling never ships in the artifact, so CI is the judge: every update type merges, majors included. Everything else (code the project ships: Go modules, crates, npm and PyPI dependencies, CDN links) automerges minors and patches; majors wait for me. Tooling majors also get the weekend window (they would otherwise wait for the first weekend of the month). No groups are set here, so these rules can come before a hub's own groups without being overridden. A group only automerges when every member does; groups here are minor/patch (or ungrouped majors), so none mixes the two kinds (scripts/check-package-rules.mjs checks it for default.json).",
+  "description": "Who automerges, on top of :automergeMinor (presets/base), which merges minor, patch, pin and lock file maintenance updates of everything. Tooling never ships in the artifact, so CI is the judge: every update type merges, majors included. Everything else (code the project ships: Go modules, crates, npm and PyPI dependencies, CDN links) keeps :automergeMinor's scope; its majors wait for me. Tooling majors also get the weekend window (they would otherwise wait for the first weekend of the month). No groups are set here, so these rules can come before a hub's own groups without being overridden. A group only automerges when every member does; groups here are minor/patch (or ungrouped majors), so none mixes the two kinds (scripts/check-package-rules.mjs checks it for default.json).",
   "packageRules": [
     {
       "description": "Tooling: GitHub Actions, mise tools, Copier template updates, pre-commit hooks. All update types, majors included.",
@@ -51,14 +51,6 @@
       "extends": [
         "local>hugoh/renovate-config//presets/weekend"
       ]
-    },
-    {
-      "description": "Everything else: minor and patch updates. Majors stay manual.",
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
-      "automerge": true
     }
   ]
 }
