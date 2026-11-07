@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Who automerges. Tooling never ships in the artifact, so CI is the judge: every update type merges, majors included. Anything else (code the project ships: Go modules, crates, npm and PyPI dependencies, CDN links) automerges patches only; minors and majors wait for me, since 0.x minors are breaking and CI doesn't prove behaviour. Only `automerge` is set here, never a group or a schedule, so these rules can come before a hub's own groups without being overridden. A group only automerges when every member does, so each hub's groups must not mix the two kinds (scripts/check-package-rules.mjs checks that for default.json).",
+  "packageRules": [
+    {
+      "description": "Tooling: GitHub Actions, mise tools, Copier template updates, pre-commit hooks. All update types, majors included.",
+      "matchManagers": ["github-actions", "mise", "copier", "pre-commit"],
+      "automerge": true
+    },
+    {
+      "description": "Tooling read by custom managers rather than the ones above: the hk and hk-config pins (hugoh/hk-config//presets/hk-pins) and the biome $schema URL (customManagers:biomeVersions, and go-tools' template), which has to move with the mise pin. Without this the biome toolchain group would mix an automerging member with a manual one and never merge.",
+      "matchPackageNames": [
+        "jdx/hk",
+        "hugoh/hk-config",
+        "@biomejs/biome",
+        "biomejs/biome"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Everything else: patch updates only. Minors and majors stay manual.",
+      "matchUpdateTypes": ["patch"],
+      "automerge": true
+    }
+  ]
+}

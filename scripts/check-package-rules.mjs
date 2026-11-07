@@ -4,7 +4,7 @@
 // updates and fails if the policy changes: the biome toolchain group (which
 // must stay below the generic "minor updates" / "patch updates" rules, or
 // their groupName replaces it), the generic groups themselves, the
-// first-party / third-party soak, and the schedules.
+// first-party / third-party soak, the schedules, and who automerges.
 //
 // Presets under presets/ that a rule extends are resolved from this checkout,
 // the way Renovate merges them beneath the rule's own settings.
@@ -147,7 +147,7 @@ const cases = [
   [
     "jdx/hk in the hk-config repo is not a linter",
     { ...update("jdx/hk", "github-releases", "minor"), repository: "hugoh/hk-config" },
-    "minor updates",
+    "tool updates",
   ],
   [
     "jdx/hk in another repo",
@@ -210,12 +210,12 @@ const cases = [
       "ruff",
       "dotfiles/dot_config/mise/exact_conf.d/10-tools.toml.tmpl",
     ),
-    "patch updates",
+    "tool updates",
   ],
   [
     "non-linter mise tool",
     update("uv", "github-releases", "patch", "mise", "uv"),
-    "patch updates",
+    "tool updates",
   ],
   [
     "linter major update stays ungrouped",
@@ -274,6 +274,22 @@ const cases = [
     },
     "first-party updates",
   ],
+  // Tooling has its own group (so it can automerge); GitHub Actions too.
+  [
+    "github-actions minor",
+    update("actions/checkout", "github-tags", "minor", "github-actions"),
+    "tool updates",
+  ],
+  [
+    "github-actions digest",
+    update("actions/checkout", "github-tags", "digest", "github-actions"),
+    "tool updates",
+  ],
+  [
+    "github-actions major stays ungrouped",
+    update("actions/checkout", "github-tags", "major", "github-actions"),
+    undefined,
+  ],
   // Controls: the generic groups must still apply to everything else.
   [
     "other custom.regex minor",
@@ -312,6 +328,62 @@ for (const [name, input, expected] of overrideCases) {
     `${ok ? "ok  " : "FAIL"} ${name}: ${out.datasource} ${out.packageName}`,
   );
 }
+// Automerge (presets/automerge): tooling merges at every update type, majors
+// included; everything else only patches. A group automerges only when every
+// member does, so no group may mix the two kinds: record each case's group and
+// automerge flag here and in the cases above, then check them together.
+const groups = new Map();
+function track(name, out) {
+  if (out.groupName === undefined) return;
+  const seen = groups.get(out.groupName) ?? new Map();
+  seen.set(name, Boolean(out.automerge));
+  groups.set(out.groupName, seen);
+}
+for (const [name, input] of cases) track(name, await applyPackageRules(input));
+const gha = (type) => update("actions/checkout", "github-tags", type, "github-actions");
+const cargo = (type) => update("tokio", "crate", type, "cargo", "tokio", "Cargo.toml");
+const gomod = (type) => update("github.com/x/y", "go", type, "gomod", "github.com/x/y", "go.mod");
+const npmDep = (type) => update("he", "npm", type, "npm", "he", "package.json");
+const automergeCases = [
+  ["pinact major (mise)", update("pinact", "github-releases", "major", "mise", "pinact"), true],
+  ["node major (mise)", update("node", "node-version", "major", "mise", "node"), true],
+  ["github-actions major", gha("major"), true],
+  ["github-actions minor", gha("minor"), true],
+  ["copier major", update("https://github.com/hugoh/go-tools.git", "git-tags", "major", "copier", "go-tools", ".copier-answers.yml"), true],
+  ["pre-commit major", update("example/hook", "github-tags", "major", "pre-commit", "example/hook", ".pre-commit-config.yaml"), true],
+  ["jdx/hk major", update("jdx/hk", "github-releases", "major"), true],
+  ["hk-config major", update("hugoh/hk-config", "github-tags", "major"), true],
+  ["biome schema major", update("@biomejs/biome", "npm", "major", "custom.jsonata", "@biomejs/biome", "biome.json"), true],
+  ["biome mise pin major", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), true],
+  ["cargo patch", cargo("patch"), true],
+  ["cargo minor", cargo("minor"), false],
+  ["cargo major", cargo("major"), false],
+  ["gomod patch", gomod("patch"), true],
+  ["gomod minor", gomod("minor"), false],
+  ["gomod major", gomod("major"), false],
+  ["npm dependency patch", npmDep("patch"), true],
+  ["npm dependency minor", npmDep("minor"), false],
+  ["npm dependency major", npmDep("major"), false],
+  ["CDN link (custom.regex) minor", update("example/lib", "npm", "minor", "custom.regex", "example/lib", "index.html"), false],
+  ["CDN link (custom.regex) patch", update("example/lib", "npm", "patch", "custom.regex", "example/lib", "index.html"), true],
+  ["first-party minor", update("hugoh/TeamsControl.spoon", "github-releases", "minor"), true],
+  ["first-party major", update("hugoh/TeamsControl.spoon", "github-releases", "major"), false],
+];
+for (const [name, input, expected] of automergeCases) {
+  const out = await applyPackageRules(input);
+  track(name, out);
+  const ok = Boolean(out.automerge) === expected;
+  if (!ok) failed = true;
+  console.log(`${ok ? "ok  " : "FAIL"} automerge ${name}: ${Boolean(out.automerge)} (want ${expected})`);
+}
+for (const [group, members] of groups) {
+  const values = new Set(members.values());
+  const ok = values.size === 1;
+  if (!ok) failed = true;
+  console.log(
+    `${ok ? "ok  " : "FAIL"} group "${group}" does not mix automerging and manual members${ok ? "" : `: ${JSON.stringify([...members])}`}`,
+  );
+}
 // Soak and timezone come from the shared presets (presets/base and
 // presets/first-party-soak); make sure adopting them kept the policy intact.
 const base = resolveExtends(config);
@@ -346,6 +418,7 @@ const saturdayEarly = resolveExtends({
 const scheduleCases = [
   ["minor schedule: weekend", update("example/other", "github-releases", "minor"), weekend],
   ["patch schedule: weekend", update("example/other", "github-releases", "patch"), weekend],
+  ["tool minor schedule: weekend", update("actions/checkout", "github-tags", "minor", "github-actions"), weekend],
   ["major schedule: monthly fallthrough", update("example/other", "github-releases", "major"), undefined],
   ["linters schedule: first weekend", update("typos", "github-releases", "patch", "mise", "typos"), monthlyWeekend],
   ["npm:renovate schedule: early Saturday", update("renovate", "npm", "patch", "mise", "npm:renovate"), saturdayEarly],
