@@ -69,7 +69,7 @@ flowchart TD
 |---|---|
 | Any time | Vulnerability fixes (6-hour soak), `first-party core` in the repos that own it (12 hours), Go patch toolchain bumps in binary repos (1 day) |
 | Saturday before 5am | `renovate CLI` |
-| Weekend (Fri 5pm–Sun 5am) | `minor updates`, `patch updates`, `first-party updates`; in the Go hub, everything but majors, including the go-tools template update |
+| Weekend (Fri 5pm–Sun 5am) | `dependency updates`, `first-party updates`; in the Go hub, everything but majors, including the go-tools template update |
 | Weekend (Fri 5pm–Sun 5am) | …plus tooling majors (GitHub Actions, mise, Copier, pre-commit, the hk pins), which automerge once CI is green |
 | First weekend of the month | Majors of shipped code, lock file maintenance; go-tools' `dev tools` / `template dev tools` |
 | Repo-specific | chezmoi runs `hugoh/**` (except hk-config) daily and lock files weekly; go-tools keeps `golangci-lint` weekly |
@@ -121,8 +121,8 @@ rules explain most of the rule-order constraints below:
    day for `hugoh/**` (both from `presets/base`), and the monthly window
    (`presets/monthly-weekend`) for everything not overridden below (major
    updates).
-3. **Groups**: all minor updates in one PR (`minor updates`); patch, pin and
-   digest updates in another (`patch updates`). Both use the weekend window.
+3. **Groups**: every minor, patch, pin and digest update in one PR
+   (`dependency updates`), on the weekend window. Majors are never grouped.
 4. **First-party**: minor, patch, pin and digest updates of `hugoh/**` get
    their own group (`first-party updates`) so a consumer can give them a
    different schedule; the core packages (reusable workflows, composite
@@ -194,7 +194,7 @@ Things to know:
 
 A `schedule` for Friday 5pm to Sunday 5am: updates land at the start of
 the weekend, leaving time to fix anything that breaks. The base config
-uses it for the weekly minor and patch/pin/digest groups. Extend it at the
+uses it for the weekly `dependency updates` group. Extend it at the
 top level or inside a `packageRules` entry:
 
 ```json
@@ -278,9 +278,9 @@ restarting and its copier updates never matured; this is the fix.
 
 Renovate applies `packageRules` top to bottom and the last matching rule wins
 for each field. A hub's own rules come after everything pulled in through
-`extends`, and the generic `minor updates` / `patch updates` groups would
-override the `groupName` of any group rule above them. That is why a
-dependency-specific group must come after them.
+`extends`, and the generic `dependency updates` group would override the
+`groupName` of any group rule above them. That is why a dependency-specific
+group must come after them.
 
 The `hk` group is one of these (it needs its own `groupName`, which has to sit
 below the generic groups). Linters themselves have no rule: a pinned linter is

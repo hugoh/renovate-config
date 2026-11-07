@@ -10,7 +10,7 @@ local linters = new Mapping<String, Step> {
     ["renovate_config_validator"] = (Base.renovate["renovate_config_validator"]) {
         glob = List("default.json", ".renovaterc.json", "presets/*.json")
     }
-    // The renovate CLI group must stay below the generic minor/patch grouping
+    // The renovate CLI group must stay below the generic grouping
     // rules in default.json (README: "Rule order matters"); this evaluates the
     // rules with Renovate's own matcher and fails if the groups, soak,
     // schedule or automerge policy is lost.

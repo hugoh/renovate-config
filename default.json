@@ -19,13 +19,9 @@
       "minimumReleaseAge": "7 days"
     },
     {
-      "matchUpdateTypes": ["minor"],
-      "groupName": "minor updates",
-      "extends": ["local>hugoh/renovate-config//presets/weekend"]
-    },
-    {
-      "matchUpdateTypes": ["patch", "pin", "digest"],
-      "groupName": "patch updates",
+      "description": "One weekly group for everything that is not a major. Minors and patches used to be separate groups because they ran on different schedules; both are on the weekend window now. Majors stay ungrouped.",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "groupName": "dependency updates",
       "extends": ["local>hugoh/renovate-config//presets/weekend"]
     },
     {
