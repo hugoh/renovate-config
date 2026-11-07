@@ -411,13 +411,14 @@ const scheduleCases = [
   ["npm:renovate schedule: early Saturday", update("renovate", "npm", "patch", "mise", "npm:renovate"), saturdayEarly],
   // The biome toolchain is a linter too: pin and $schema share one group, so
   // they must share its window. Majors are included, they don't fall through.
-  ["biome mise pin schedule: first weekend", update("@biomejs/biome", "npm", "patch", "mise", "biome", "mise.toml"), monthlyWeekend],
-  ["biome mise pin minor schedule: first weekend", update("@biomejs/biome", "npm", "minor", "mise", "biome", "mise.toml"), monthlyWeekend],
+  ["biome mise pin schedule: weekend", update("@biomejs/biome", "npm", "patch", "mise", "biome", "mise.toml"), weekend],
+  ["biome mise pin minor schedule: weekend", update("@biomejs/biome", "npm", "minor", "mise", "biome", "mise.toml"), weekend],
   ["jdx/hk schedule: first weekend", update("jdx/hk", "github-releases", "minor"), monthlyWeekend],
   ["hk-config patch schedule: first weekend", update("hugoh/hk-config", "github-tags", "patch"), monthlyWeekend],
   ["hk-config minor schedule: first weekend", update("hugoh/hk-config", "github-tags", "minor"), monthlyWeekend],
-  ["biome schema schedule: first weekend", update("@biomejs/biome", "npm", "minor", "custom.jsonata", "@biomejs/biome", "biome.json"), monthlyWeekend],
-  // Majors are tooling that automerges: weekend, like the other tooling majors.
+  ["biome schema schedule: weekend", update("@biomejs/biome", "npm", "minor", "custom.jsonata", "@biomejs/biome", "biome.json"), weekend],
+  // Biome is tooling like the rest: weekend for every update type. The group
+  // only pairs the pin and the $schema, so they share one window.
   ["biome major schedule: weekend", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), weekend],
   ["biome schema major schedule: weekend", update("@biomejs/biome", "npm", "major", "custom.jsonata", "@biomejs/biome", "biome.json"), weekend],
 ];

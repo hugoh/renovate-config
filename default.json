@@ -104,18 +104,11 @@
       "extends": ["local>hugoh/renovate-config//presets/saturday-early"]
     },
     {
-      "description": "The biome CLI pin (mise.toml) and the $schema URL (biome.json, read by customManagers:biomeVersions) come from different managers; one group moves them in one PR so the CLI doesn't lag the schema (biome warns on a mismatch). Both look up on npm: the mise manager's github-tags lookup finds nothing, since the tags are named @biomejs/biome@<version>. First-weekend window like the linters for minors and patches: a release can add a rule or change formatting and fail CI. Majors take the weekend window like other tooling majors (the rule right below). Must stay below the generic minor/patch rules, or their groupName replaces it (later rules win); scripts/check-package-rules.mjs enforces it.",
+      "description": "The biome CLI pin (mise.toml) and the $schema URL (biome.json, read by customManagers:biomeVersions) come from different managers; one group moves them in one PR so the CLI doesn't lag the schema (biome warns on a mismatch). Both look up on npm: the mise manager's github-tags lookup finds nothing, since the tags are named @biomejs/biome@<version>. Biome is tooling like the rest, so no schedule of its own: it keeps the weekend window the generic groups and presets/automerge give each update type; the group is only here to pair the two members. Must stay below the generic minor/patch rules, or their groupName replaces it (later rules win); scripts/check-package-rules.mjs enforces it.",
       "matchDepNames": ["biome", "biomejs/biome", "@biomejs/biome"],
       "groupName": "biome toolchain",
       "overrideDatasource": "npm",
-      "overridePackageName": "@biomejs/biome",
-      "extends": ["local>hugoh/renovate-config//presets/monthly-weekend"]
-    },
-    {
-      "description": "Biome majors take the weekend window like every other tooling major (presets/automerge): they automerge once CI is green, and the monthly batching above is for minors and patches, where a release that adds a rule can fail CI. The pin and the $schema are still one group, so they move in the same window. Must stay below the biome toolchain rule, whose schedule it replaces.",
-      "matchDepNames": ["biome", "biomejs/biome", "@biomejs/biome"],
-      "matchUpdateTypes": ["major"],
-      "extends": ["local>hugoh/renovate-config//presets/weekend"]
+      "overridePackageName": "@biomejs/biome"
     }
   ]
 }
