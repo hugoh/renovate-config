@@ -250,7 +250,8 @@ presets are evaluated in (`America/Chicago`), the 7-day third-party
 `minimumReleaseAge` and the 1-day one for `hugoh/**`
 (`presets/first-party-soak`), `presets/monthly-weekend`,
 `presets/vulnerability-alerts` plus OSV alerts, `presets/automerge`,
-Renovate's `:automergeLinters`, `:automergeMinor` and `:automergeDigest`, and `hugoh/hk-config//presets/hk-pins`
+Renovate's `:automergeLinters`, `:automergeMinor` (keep it: it is what merges `pin`
+and lock file maintenance updates, not just minor and patch) and `:automergeDigest`, and `hugoh/hk-config//presets/hk-pins`
 (how to read the hk pins). `default.json` and
 go-tools' `go-renovaterc.json` extend it and add their own ecosystem rules and
 groups on top.

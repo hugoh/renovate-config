@@ -323,8 +323,8 @@ const automergeCases = [
   ["hk-config major", update("hugoh/hk-config", "github-tags", "major"), true],
   ["biome schema major", update("@biomejs/biome", "npm", "major", "custom.jsonata", "@biomejs/biome", "biome.json"), true],
   ["biome mise pin major", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), true],
-  // :automergeMinor also covers pin and lock file maintenance; losing it once
-  // stopped lock file refreshes from merging.
+  // :automergeMinor (presets/base) also covers pin and lock file maintenance.
+  // Do not drop it as "redundant": nothing else merges these.
   ["lock file maintenance", update("tokio", "crate", "lockFileMaintenance", "cargo", "tokio", "Cargo.lock"), true],
   ["cargo pin", cargo("pin"), true],
   ["cargo patch", cargo("patch"), true],
