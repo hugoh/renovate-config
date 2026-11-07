@@ -71,7 +71,7 @@ flowchart TD
 | Saturday before 5am | `renovate CLI` |
 | Weekend (Fri 5pm–Sun 5am) | `minor updates`, `patch updates`, `first-party updates`; in the Go hub, everything but majors, including the go-tools template update |
 | Weekend (Fri 5pm–Sun 5am) | …plus tooling majors (GitHub Actions, mise, Copier, pre-commit, the hk pins), which automerge once CI is green |
-| First weekend of the month | Majors of shipped code, lock file maintenance, `linters` (with hk and hk-config); go-tools' `dev tools` / `template dev tools` |
+| First weekend of the month | Majors of shipped code, lock file maintenance; go-tools' `dev tools` / `template dev tools` |
 | Repo-specific | chezmoi runs `hugoh/**` (except hk-config) daily and lock files weekly; go-tools keeps `golangci-lint` weekly |
 
 Soaks: 7 days for third parties (`presets/base`), 1 day for `hugoh/**`
@@ -127,10 +127,10 @@ rules explain most of the rule-order constraints below:
    their own group (`first-party updates`) so a consumer can give them a
    different schedule; the core packages (reusable workflows, composite
    actions, shared tooling) propagate within a day and automerge (`first-party
-   core`). The exception is the `hugoh/hk-config` pin (`linters`, monthly, see
+   core`). The exception is the `hugoh/hk-config` pin (`hk`, with `jdx/hk`, see
    "The hk pins").
-5. **`linters`** and **`renovate CLI`**: below the generic groups so they win
-   over them, with the linters on the monthly window and the renovate CLI on
+5. **`hk`** and **`renovate CLI`**: below the generic groups so they win over
+   them: `jdx/hk` and `hugoh/hk-config` in one PR, and the renovate CLI on
    `presets/saturday-early` (see below).
 
 A consuming repo's own `packageRules` come after all of this, so they can
@@ -179,7 +179,7 @@ Things to know:
 - The hk pins and the biome `$schema` are read by custom managers, so the
   preset matches them by package name. Without that, a biome major would
   merge itself in `mise.toml` and wait for me in `biome.json`.
-- `hk` and `hk-config` majors are not grouped (the `linters` rule is minor and
+- `hk` and `hk-config` majors are not grouped (the `hk` rule is minor and
   patch only). If an hk-config major needs a newer hk, its PR fails CI until
   the hk major has merged, then Renovate rebases it and it merges.
 - A repo whose tools are the product, not what builds it (chezmoi's global
@@ -278,20 +278,10 @@ for each field. A hub's own rules come after everything pulled in through
 override the `groupName` of any group rule above them. That is why a
 dependency-specific group must come after them.
 
-The `linters` group is one of these: the pinned linters in the repo-root
-`mise.toml` move monthly, in one PR, on `presets/monthly-weekend`. It needs its
-own `groupName` (a group whose members have different schedules ends up on the
-wrong one) and has to sit below the generic groups.
-Its tool list is the tools behind hk-config's `base.pkl` steps, plus linters
-only some repos run (`editorconfig-checker`, `pypi:ansible-lint`, `checkov`,
-`swiftlint`). `base.pkl`'s `stepTools` maps each hk step to the mise
-tool behind it, and `scripts/check-package-rules.mjs` evaluates it from the
-hk-config version pinned in `hk.pkl` (or the `base.pkl` named by
-`HK_CONFIG_BASE_PKL`, to try an unreleased hk-config) and fails when a tool is
-in neither the `linters` rule nor the script's exclusions (`npm:renovate` has its own group, biome, tofu and trivy stay weekly), or when the
-rule lists a tool hk-config no longer runs. Since the check also runs when
-Renovate bumps the hk-config pin, a new linter shows up as a failing PR rather
-than as a tool that quietly stays weekly.
+The `hk` group is one of these (it needs its own `groupName`, which has to sit
+below the generic groups). Linters themselves have no rule: a pinned linter is
+tooling like the rest and joins the generic weekly groups, so there is no tool
+list to keep in sync with hk-config.
 
 `npm:renovate` has the same problem: a rule pulled in through `extends` (such
 as `npm-renovate-debounce`'s) would come before the generic groups, which would
@@ -317,10 +307,10 @@ schedules change.
 `hugoh/hk-config//presets/hk-pins` (through `presets/base`) teaches Renovate how
 to read the `jdx/hk` and `hugoh/hk-config` pins: custom managers for `.pkl`
 and `mise.toml`, and disabling the built-in `mise` manager for `hk`. They are
-moved in one go: `jdx/hk` and `hugoh/hk-config` both join the `linters`
-group and its first-weekend window, with the 7-day soak (hk-config's own
-1-day soak would let it mature before the hk it needs), since a release of
-either can fail CI like a linter release and hk-config needs a minimum hk
-(`min_hk_version`; see hk-config's README). Not in the hk-config repo itself,
-where hk is part of the project rather than a tool it lints with: there
+moved in one go: `jdx/hk` and `hugoh/hk-config` both join the `hk` group
+on the weekend window, with the 7-day soak (hk-config's own 1-day soak would
+let it mature before the hk it needs), since a release of either can fail CI
+and hk-config needs a minimum hk (`min_hk_version`; see hk-config's README).
+Not in the hk-config repo itself, where hk is part of the project rather than
+a tool it lints with: there
 `jdx/hk` stays in the generic groups.

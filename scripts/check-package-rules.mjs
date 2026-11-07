@@ -1,18 +1,13 @@
 #!/usr/bin/env node
 // Regression check for default.json's packageRules (see README: "Rule order
 // matters"). Runs them through Renovate's own rule matcher for synthetic
-// updates and fails if the policy changes: the linters group (which
+// updates and fails if the policy changes: the renovate CLI group (which
 // must stay below the generic "minor updates" / "patch updates" rules, or
 // their groupName replaces it), the generic groups themselves, the
 // first-party / third-party soak, the schedules, and who automerges.
 //
 // Presets under presets/ that a rule extends are resolved from this checkout,
 // the way Renovate merges them beneath the rule's own settings.
-//
-// It also checks that the `linters` rule covers every tool hk-config's
-// `stepTools` (base.pkl) maps a step to, so the two can't drift apart. That
-// reads the hk-config version pinned in hk.pkl through `pkl`; set
-// HK_CONFIG_BASE_PKL to a local base.pkl to check an unreleased hk-config.
 //
 // Everything is local: the rule order inside default.json is what decides the
 // outcome, because rules that come in through `extends` (hk-config's
@@ -127,32 +122,32 @@ const update = (
 
 const cases = [
   // [description, update, expected groupName]
-  // jdx/hk and hk-config join the linters group, except jdx/hk in the
-  // hk-config repo, where it is part of the project (README: "The hk pins").
+  // jdx/hk and hk-config join the hk group, except jdx/hk in the hk-config
+  // repo, where it is part of the project (README: "The hk pins").
   [
     "jdx/hk minor",
     update("jdx/hk", "github-releases", "minor"),
-    "linters",
+    "hk",
   ],
   [
     "hk-config patch",
     update("hugoh/hk-config", "github-tags", "patch"),
-    "linters",
+    "hk",
   ],
   [
     "hk-config minor",
     update("hugoh/hk-config", "github-tags", "minor"),
-    "linters",
+    "hk",
   ],
   [
-    "jdx/hk in the hk-config repo is not a linter",
+    "jdx/hk in the hk-config repo is not paired",
     { ...update("jdx/hk", "github-releases", "minor"), repository: "hugoh/hk-config" },
     "minor updates",
   ],
   [
     "jdx/hk in another repo",
     { ...update("jdx/hk", "github-releases", "minor"), repository: "hugoh/config" },
-    "linters",
+    "hk",
   ],
   [
     "hk-config major stays ungrouped",
@@ -181,44 +176,17 @@ const cases = [
     update("biomejs/biome", "github-releases", "minor", "mise", "biome"),
     "minor updates",
   ],
-  // Linters in the repo's own mise.toml move in their own monthly group; the
-  // same tools in other files (config's global tools) stay in the weekly ones.
-  ...[
-    ["typos", "github-releases"],
-    ["rumdl", "github-releases"],
-    ["tombi", "github-releases"],
-    ["github:owenlamont/ryl", "github-releases"],
-    ["aqua:Kampfkarren/selene", "github-releases"],
-    ["aqua:anordal/shellharden", "github-releases"],
-    ["pypi:ansible-lint", "pypi"],
-    ["checkov", "github-releases"],
-    ["swiftlint", "github-releases"],
-  ].flatMap(([dep, datasource]) =>
-    ["patch", "minor"].map((updateType) => [
-      `${dep} ${updateType} in mise.toml`,
-      update(dep, datasource, updateType, "mise", dep),
-      "linters",
-    ]),
+  // Linters are tooling like the rest: no group of their own.
+  ...["typos", "rumdl", "tombi", "github:owenlamont/ryl", "pypi:ansible-lint"].flatMap(
+    (dep) =>
+      ["patch", "minor"].map((updateType) => [
+        `${dep} ${updateType} in mise.toml`,
+        update(dep, dep.startsWith("pypi:") ? "pypi" : "github-releases", updateType, "mise", dep),
+        updateType === "patch" ? "patch updates" : "minor updates",
+      ]),
   ),
   [
-    "linter in a global tools file",
-    update(
-      "ruff",
-      "github-releases",
-      "patch",
-      "mise",
-      "ruff",
-      "dotfiles/dot_config/mise/exact_conf.d/10-tools.toml.tmpl",
-    ),
-    "patch updates",
-  ],
-  [
-    "non-linter mise tool",
-    update("uv", "github-releases", "patch", "mise", "uv"),
-    "patch updates",
-  ],
-  [
-    "linter major update stays ungrouped",
+    "tooling major update stays ungrouped",
     update("pinact", "github-releases", "major", "mise", "pinact"),
     undefined,
   ],
@@ -407,15 +375,15 @@ const scheduleCases = [
   ["hk major schedule: weekend", update("jdx/hk", "github-releases", "major"), weekend],
   ["hk-config major schedule: weekend", update("hugoh/hk-config", "github-tags", "major"), weekend],
   ["cargo major schedule: monthly fallthrough", update("tokio", "crate", "major", "cargo", "tokio", "Cargo.toml"), undefined],
-  ["linters schedule: first weekend", update("typos", "github-releases", "patch", "mise", "typos"), monthlyWeekend],
+  ["linter schedule: weekend", update("typos", "github-releases", "patch", "mise", "typos"), weekend],
   ["npm:renovate schedule: early Saturday", update("renovate", "npm", "patch", "mise", "npm:renovate"), saturdayEarly],
   // Biome is tooling like the rest: weekend for every update type, pin and
   // $schema alike.
   ["biome mise pin schedule: weekend", update("@biomejs/biome", "npm", "patch", "mise", "biome", "mise.toml"), weekend],
   ["biome mise pin minor schedule: weekend", update("@biomejs/biome", "npm", "minor", "mise", "biome", "mise.toml"), weekend],
-  ["jdx/hk schedule: first weekend", update("jdx/hk", "github-releases", "minor"), monthlyWeekend],
-  ["hk-config patch schedule: first weekend", update("hugoh/hk-config", "github-tags", "patch"), monthlyWeekend],
-  ["hk-config minor schedule: first weekend", update("hugoh/hk-config", "github-tags", "minor"), monthlyWeekend],
+  ["jdx/hk schedule: weekend", update("jdx/hk", "github-releases", "minor"), weekend],
+  ["hk-config patch schedule: weekend", update("hugoh/hk-config", "github-tags", "patch"), weekend],
+  ["hk-config minor schedule: weekend", update("hugoh/hk-config", "github-tags", "minor"), weekend],
   ["biome schema schedule: weekend", update("@biomejs/biome", "npm", "minor", "custom.jsonata", "@biomejs/biome", "biome.json"), weekend],
   // Biome is tooling like the rest: weekend for every update type. The group
   // only pairs the pin and the $schema, so they share one window.
@@ -473,60 +441,6 @@ for (const [name, actual] of [
     `${ok ? "ok  " : "FAIL"} ${name}: monthly-weekend (got ${JSON.stringify(actual)})`,
   );
 }
-// The linters rule lists the tools behind hk-config's steps. Tools that are
-// deliberately not in it must say why; a tool in neither place is a new step
-// nobody classified, and a listed tool hk-config no longer runs is stale.
-const EXCLUDED = {
-  biome: "tooling like the rest: generic weekly groups",
-  "npm:renovate": "own group (renovate CLI)",
-  tofu: "infrastructure tool, not a linter",
-  trivy: "security scanner, stays on the weekly groups",
-};
-const REPO_LOCAL = new Set([
-  "editorconfig-checker",
-  "pypi:ansible-lint",
-  "checkov",
-  "swiftlint",
-]);
-
-function stepTools() {
-  const source = process.env.HK_CONFIG_BASE_PKL;
-  const [expression, file] = source
-    ? ["stepTools", resolve(source)]
-    : ["Base.stepTools", join(here, "..", "hk.pkl")];
-  const json = `new JsonRenderer {}.renderValue(${expression})`;
-  try {
-    return JSON.parse(
-      execFileSync("pkl", ["eval", "-x", json, "-f", "plain", file], {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "pipe"],
-      }),
-    );
-  } catch (error) {
-    throw new Error(
-      `cannot read stepTools from ${file}: bump the hk-config pin in hk.pkl to a release that has it, or set HK_CONFIG_BASE_PKL\n${error.stderr ?? error.message}`,
-    );
-  }
-}
-
-const linters = new Set(
-  // Not just the first "linters" rule: the hk/hk-config rule shares the name.
-  config.packageRules.find(
-    (rule) => rule.groupName === "linters" && rule.matchDepNames,
-  )?.matchDepNames ?? [],
-);
-const hkTools = new Set(Object.values(stepTools()).filter(Boolean));
-const coverage = [
-  ["unclassified hk-config tools", [...hkTools].filter((t) => !linters.has(t) && !(t in EXCLUDED))],
-  ["linters entries hk-config no longer runs", [...linters].filter((t) => !hkTools.has(t) && !REPO_LOCAL.has(t))],
-  ["excluded tools that are also listed", Object.keys(EXCLUDED).filter((t) => linters.has(t))],
-  ["excluded tools hk-config no longer runs", Object.keys(EXCLUDED).filter((t) => !hkTools.has(t))],
-];
-for (const [name, tools] of coverage) {
-  const ok = tools.length === 0;
-  if (!ok) failed = true;
-  console.log(`${ok ? "ok  " : "FAIL"} ${name}: ${tools.join(", ") || "none"}`);
-}
 // The first-party core rule only applies where a repo owns the package it
 // consumes, so matchPackageNames and matchRepositories must list the same
 // repos; otherwise a package is either never fast-laned or fast-laned from a
@@ -559,7 +473,7 @@ if (base.timezone !== "America/Chicago") {
 }
 if (failed) {
   console.error(
-    "\nThe linters and renovate CLI rules in default.json must stay below the generic minor/patch grouping rules.",
+    "\nThe renovate CLI rule in default.json must stay below the generic minor/patch grouping rules.",
   );
   process.exit(1);
 }
