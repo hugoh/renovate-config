@@ -1,14 +1,14 @@
 [tools]
 node = "26.13.0"
-"npm:renovate" = { version = "44.198.3", trust_policy_excludes = ["*"] }
-hk = "2.10.0"
-pkl = "0.32.2"
-jactionlint = "2.4.0"
+"npm:renovate" = { version = "44.222.4", trust_policy_excludes = ["*"] }
+hk = { version = "2.11.1", workflow = "release.yml" }
+pkl = "0.33.0"
+jactionlint = { version = "2.5.0", workflow = "release.yaml" }
 pinact = "5.0.2"
 ghalint = "1.6.0"
 gitleaks = "8.30.1"
-typos = "1.51.1"
+typos = "1.52.0"
 rumdl = "0.3.2"
-tombi = "1.9.8"
-"github:owenlamont/ryl" = "0.27.0"
-biome = "2.6.4"
+tombi = "1.11.0"
+"github:owenlamont/ryl" = "0.29.0"
+biome = "2.6.6"
