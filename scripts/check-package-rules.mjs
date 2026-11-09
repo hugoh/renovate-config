@@ -386,16 +386,18 @@ const monthlyWeekend = resolveExtends({
 const saturdayEarly = resolveExtends({
   extends: ["local>hugoh/renovate-config//presets/saturday-early"],
 }).schedule;
+const monthlyWindowStrict = ["* 17-23 1-7 * 4", "* 0-16 2-8 * 5"];
 const scheduleCases = [
   ["minor schedule: weekend", update("example/other", "github-releases", "minor"), weekend],
   ["patch schedule: weekend", update("example/other", "github-releases", "patch"), weekend],
   ["major schedule: monthly fallthrough", update("example/other", "github-releases", "major"), undefined],
-  // Tooling majors automerge, so they take the weekend window; shipped code's
-  // majors (manual) stay on the monthly one.
-  ["tool major schedule: weekend (mise)", update("pinact", "github-releases", "major", "mise", "pinact"), weekend],
-  ["tool major schedule: weekend (actions)", update("actions/checkout", "github-tags", "major", "github-actions"), weekend],
-  ["hk major schedule: weekend", update("jdx/hk", "github-releases", "major"), weekend],
-  ["hk-config major schedule: weekend", update("hugoh/hk-config", "github-tags", "major"), weekend],
+  // Tooling majors automerge, so they take the monthly window, ahead of the
+  // weekly group; shipped code's majors (manual) fall through to it too.
+  ["tool major schedule: monthly (mise)", update("pinact", "github-releases", "major", "mise", "pinact"), monthlyWeekend],
+  ["tool major schedule: monthly (actions)", update("actions/checkout", "github-tags", "major", "github-actions"), monthlyWeekend],
+  ["hk major schedule: monthly", update("jdx/hk", "github-releases", "major"), monthlyWeekend],
+  ["hk-config major schedule: monthly", update("hugoh/hk-config", "github-tags", "major"), monthlyWeekend],
+  ["first-party updates schedule: early Saturday", update("hugoh/some-tool", "github-tags", "minor"), saturdayEarly],
   ["cargo major schedule: monthly fallthrough", update("tokio", "crate", "major", "cargo", "tokio", "Cargo.toml"), undefined],
   ["linter schedule: weekend", update("typos", "github-releases", "patch", "mise", "typos"), weekend],
   ["npm:renovate schedule: early Saturday", update("renovate", "npm", "patch", "mise", "npm:renovate"), saturdayEarly],
@@ -407,10 +409,10 @@ const scheduleCases = [
   ["hk-config patch schedule: weekend", update("hugoh/hk-config", "github-tags", "patch"), weekend],
   ["hk-config minor schedule: weekend", update("hugoh/hk-config", "github-tags", "minor"), weekend],
   ["biome schema schedule: weekend", update("@biomejs/biome", "npm", "minor", "custom.jsonata", "@biomejs/biome", "biome.json"), weekend],
-  // Biome is tooling like the rest: weekend for every update type. The group
-  // only pairs the pin and the $schema, so they share one window.
-  ["biome major schedule: weekend", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), weekend],
-  ["biome schema major schedule: weekend", update("@biomejs/biome", "npm", "major", "custom.jsonata", "@biomejs/biome", "biome.json"), weekend],
+  // Biome is tooling like the rest. The group only pairs the pin and the
+  // $schema, so they share one window.
+  ["biome major schedule: monthly", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), monthlyWeekend],
+  ["biome schema major schedule: monthly", update("@biomejs/biome", "npm", "major", "custom.jsonata", "@biomejs/biome", "biome.json"), monthlyWeekend],
 ];
 for (const [name, input, expected] of scheduleCases) {
   const out = await applyPackageRules(input);
@@ -462,6 +464,13 @@ for (const [name, actual] of [
   console.log(
     `${ok ? "ok  " : "FAIL"} ${name}: monthly-weekend (got ${JSON.stringify(actual)})`,
   );
+}
+// Package rules cannot extend presets/monthly-weekend (it holds
+// lockFileMaintenance), so its schedule is inlined; keep the copy honest.
+{
+  const ok = JSON.stringify(monthlyWeekend) === JSON.stringify(monthlyWindowStrict);
+  if (!ok) failed = true;
+  console.log(`${ok ? "ok  " : "FAIL"} monthly-weekend schedule matches the inlined copy`);
 }
 // The first-party core rule only applies where a repo owns the package it
 // consumes, so matchPackageNames and matchRepositories must list the same

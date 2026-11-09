@@ -25,19 +25,21 @@
       "extends": ["local>hugoh/renovate-config//presets/weekend"]
     },
     {
-      "description": "Own group for minor/patch/pin/digest updates of my packages. A group is one branch with one schedule, so a consumer's hugoh/** schedule override (e.g. daily) needs a group of its own, not the generic one, which would end up with mixed schedules. Majors stay ungrouped. Must stay below the generic dependency updates rule (its groupName would replace it) and above the hk and first-party core rules below, whose groupName must win.",
+      "description": "Own group for minor/patch/pin/digest updates of my packages. A group is one branch with one schedule, so a consumer's hugoh/** schedule override (e.g. daily) needs a group of its own, not the generic one, which would end up with mixed schedules. Short Saturday-early window: the 1-day soak lets every new release of my packages (gh-workflows ships several a week) mature mid-weekend, and a wide window opened one PR per release per repo. Majors stay ungrouped. Must stay below the generic dependency updates rule (its groupName would replace it) and above the hk and first-party core rules below, whose groupName must win.",
       "matchPackageNames": ["hugoh/**"],
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "groupName": "first-party updates"
+      "groupName": "first-party updates",
+      "extends": ["local>hugoh/renovate-config//presets/saturday-early"]
     },
     {
-      "description": "hk and hk-config move together in one weekly PR: a release of either can change checks and fail CI, and hk-config needs a minimum hk version. Read by custom managers (hk.pkl, mise.toml), which is why the generic rules alone would not pair them across update types. Skipped in the hk-config repo, where hk is part of the project: it stays in the generic group. Both get the 7-day soak: updates join the branch as each matures, so a shorter hk-config soak could land it without the hk it needs. A consumer overriding the schedule of hugoh/** must exclude hugoh/hk-config, or the group gets mixed schedules.",
+      "description": "hk and hk-config move together in one weekly PR: a release of either can change checks and fail CI, and hk-config needs a minimum hk version. Read by custom managers (hk.pkl, mise.toml), which is why the generic rules alone would not pair them across update types. Skipped in the hk-config repo, where hk is part of the project: it stays in the generic group. Both get the 7-day soak: updates join the branch as each matures, so a shorter hk-config soak could land it without the hk it needs. Sets the weekend window itself so hk-config does not inherit first-party updates' Saturday-early one while jdx/hk stays on the weekend. A consumer overriding the schedule of hugoh/** must exclude hugoh/hk-config, or the group gets mixed schedules.",
       "matchPackageNames": ["jdx/hk", "hugoh/hk-config"],
       "matchManagers": ["custom.regex"],
       "matchUpdateTypes": ["minor", "patch"],
       "matchRepositories": ["!hugoh/hk-config"],
       "minimumReleaseAge": "7 days",
-      "groupName": "hk"
+      "groupName": "hk",
+      "extends": ["local>hugoh/renovate-config//presets/weekend"]
     },
     {
       "description": "First-party reusable workflows and composite actions: a bump only reaches consumers once a new tag is cut, so propagate within a day and automerge. Only in the repos that own them. Own groupName so the generic dependency updates group doesn't impose its weekend schedule instead of \"at any time\".",
