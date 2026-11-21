@@ -200,16 +200,6 @@ Things to know:
 - Branch protection needs a required check (an aggregate "ci" job), or
   platform automerge merges before CI has run.
 
-### Renamed presets
-
-The presets are named for their role, not their days, so shifting a window
-edits one file and no names. `presets/weekend`, `presets/saturday-early` and
-`presets/monthly-weekend` remain as deprecated aliases of `presets/weekly`,
-`presets/weekly-debounced` and `presets/monthly`, so consumers keep working
-while they migrate; `scripts/check-package-rules.mjs` checks the aliases
-resolve to the same config. Consumers should move to the new names; the
-aliases can go once nothing extends them.
-
 ### `presets/weekly`
 
 A `schedule` for Thursday 5pm to Saturday 5am: updates land at the start of

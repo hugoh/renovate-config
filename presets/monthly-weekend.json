@@ -1,5 +1,0 @@
-{
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Deprecated alias of presets/monthly, kept so consumers that still extend presets/monthly-weekend keep working. Extend presets/monthly instead.",
-  "extends": ["local>hugoh/renovate-config//presets/monthly"]
-}
