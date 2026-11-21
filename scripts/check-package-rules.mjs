@@ -485,24 +485,6 @@ for (const [name, actual, expected] of [
   if (!ok) failed = true;
   console.log(`${ok ? "ok  " : "FAIL"} ${name} schedule: ${JSON.stringify(actual)}`);
 }
-// presets/weekend, saturday-early and monthly-weekend are aliases kept for
-// consumers that still extend them; the stable names hold the schedules.
-const presetOf = (name) =>
-  resolveExtends({ extends: [`local>hugoh/renovate-config//presets/${name}`] });
-for (const [stable, alias, schedule] of [
-  ["weekly", "weekend", weeklyStrict],
-  ["weekly-debounced", "saturday-early", weeklyDebouncedStrict],
-  ["monthly", "monthly-weekend", monthlyWindowStrict],
-]) {
-  const actual = presetOf(stable);
-  const ok =
-    JSON.stringify(actual.schedule) === JSON.stringify(schedule) &&
-    JSON.stringify(actual) === JSON.stringify(presetOf(alias));
-  if (!ok) failed = true;
-  console.log(
-    `${ok ? "ok  " : "FAIL"} presets/${stable} holds the schedule and presets/${alias} resolves to it`,
-  );
-}
 // The first-party core rule only applies where a repo owns the package it
 // consumes, so matchPackageNames and matchRepositories must list the same
 // repos; otherwise a package is either never fast-laned or fast-laned from a

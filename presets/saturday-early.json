@@ -1,5 +1,0 @@
-{
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Deprecated alias of presets/weekly-debounced, kept so consumers that still extend presets/saturday-early keep working. Extend presets/weekly-debounced instead.",
-  "extends": ["local>hugoh/renovate-config//presets/weekly-debounced"]
-}
