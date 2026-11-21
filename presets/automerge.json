@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Who automerges, on top of :automergeMinor (presets/base), which merges minor, patch, pin and lock file maintenance updates of everything. Tooling never ships in the artifact, so CI is the judge: every update type merges, majors included. Everything else (code the project ships: Go modules, crates, npm and PyPI dependencies, CDN links) keeps :automergeMinor's scope; its majors wait for me. Tooling majors keep the monthly window (Thursday before the first weekend), set explicitly so they are not tied to the weekly one. No groups are set here, so these rules can come before a hub's own groups without being overridden. A group only automerges when every member does; groups here are minor/patch (or ungrouped majors), so none mixes the two kinds (scripts/check-package-rules.mjs checks it for default.json).",
+  "description": "Who automerges, on top of :automergeMinor (presets/base), which merges minor, patch, pin and lock file maintenance updates of everything. Tooling never ships in the artifact, so CI is the judge: every update type merges, majors included. Everything else (code the project ships: Go modules, crates, npm and PyPI dependencies, CDN links) keeps :automergeMinor's scope; its majors wait for me. Tooling majors keep the monthly window (Thursday before the weekly window), set explicitly so they are not tied to the weekly one. No groups are set here, so these rules can come before a hub's own groups without being overridden. A group only automerges when every member does; groups here are minor/patch (or ungrouped majors), so none mixes the two kinds (scripts/check-package-rules.mjs checks it for default.json).",
   "packageRules": [
     {
       "description": "Tooling: GitHub Actions, mise tools, Copier template updates, pre-commit hooks. All update types, majors included.",
@@ -18,7 +18,7 @@
       "automerge": true
     },
     {
-      "description": "Tooling majors land in the monthly Wednesday-to-Thursday window, ahead of the weekly group: they automerge once CI is green, so there is no pile to triage, and a merged major invalidates the minor and patch updates of the old line before the weekly group is built. Same 7-day soak. The renovate CLI keeps its own window, set by default.json's later rule. The schedule is inlined because presets/monthly-weekend also sets lockFileMaintenance, which a package rule cannot hold; scripts/check-package-rules.mjs checks the copies match.",
+      "description": "Tooling majors land in the monthly Wednesday-to-Thursday window, ahead of the weekly group: they automerge once CI is green, so there is no pile to triage, and a merged major invalidates the minor and patch updates of the old line before the weekly group is built. Same 7-day soak. The renovate CLI keeps its own window, set by default.json's later rule. The schedule is inlined because presets/monthly also sets lockFileMaintenance, which a package rule cannot hold; scripts/check-package-rules.mjs checks the copies match.",
       "matchManagers": ["github-actions", "mise", "copier", "pre-commit"],
       "matchUpdateTypes": ["major"],
       "schedule": ["* 17-23 1-7 * 3", "* 0-16 2-8 * 4"]

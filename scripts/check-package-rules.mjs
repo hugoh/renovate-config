@@ -373,48 +373,48 @@ for (const [name, packageName, datasource, expected] of soakCases) {
     `${ok ? "ok  " : "FAIL"} ${name}: minimumReleaseAge=${out.minimumReleaseAge} (want ${expected})`,
   );
 }
-// Minor, patch, pin and digest share the weekend window; major gets no
+// Minor, patch, pin and digest share the weekly window; major gets no
 // rule-level schedule
 // and so falls through to the monthly window from presets/base (tooling
 // majors excepted, below).
-const weekend = resolveExtends({
-  extends: ["local>hugoh/renovate-config//presets/weekend"],
+const weeklySchedule = resolveExtends({
+  extends: ["local>hugoh/renovate-config//presets/weekly"],
 }).schedule;
-const monthlyWeekend = resolveExtends({
-  extends: ["local>hugoh/renovate-config//presets/monthly-weekend"],
+const monthlySchedule = resolveExtends({
+  extends: ["local>hugoh/renovate-config//presets/monthly"],
 }).schedule;
-const saturdayEarly = resolveExtends({
-  extends: ["local>hugoh/renovate-config//presets/saturday-early"],
+const weeklyDebouncedSchedule = resolveExtends({
+  extends: ["local>hugoh/renovate-config//presets/weekly-debounced"],
 }).schedule;
 const monthlyWindowStrict = ["* 17-23 1-7 * 3", "* 0-16 2-8 * 4"];
-const weekendStrict = ["* 17-23 * * 4", "* * * * 5", "* 0-4 * * 6"];
-const wednesdayEarlyStrict = ["* 0-4 * * 3"];
+const weeklyStrict = ["* 17-23 * * 4", "* * * * 5", "* 0-4 * * 6"];
+const weeklyDebouncedStrict = ["* 0-4 * * 3"];
 const scheduleCases = [
-  ["minor schedule: weekend", update("example/other", "github-releases", "minor"), weekend],
-  ["patch schedule: weekend", update("example/other", "github-releases", "patch"), weekend],
+  ["minor schedule: weekly", update("example/other", "github-releases", "minor"), weeklySchedule],
+  ["patch schedule: weekly", update("example/other", "github-releases", "patch"), weeklySchedule],
   ["major schedule: monthly fallthrough", update("example/other", "github-releases", "major"), undefined],
   // Tooling majors automerge, so they take the monthly window, ahead of the
   // weekly group; shipped code's majors (manual) fall through to it too.
-  ["tool major schedule: monthly (mise)", update("pinact", "github-releases", "major", "mise", "pinact"), monthlyWeekend],
-  ["tool major schedule: monthly (actions)", update("actions/checkout", "github-tags", "major", "github-actions"), monthlyWeekend],
-  ["hk major schedule: monthly", update("jdx/hk", "github-releases", "major"), monthlyWeekend],
-  ["hk-config major schedule: monthly", update("hugoh/hk-config", "github-tags", "major"), monthlyWeekend],
-  ["first-party updates schedule: early Wednesday", update("hugoh/some-tool", "github-tags", "minor"), saturdayEarly],
+  ["tool major schedule: monthly (mise)", update("pinact", "github-releases", "major", "mise", "pinact"), monthlySchedule],
+  ["tool major schedule: monthly (actions)", update("actions/checkout", "github-tags", "major", "github-actions"), monthlySchedule],
+  ["hk major schedule: monthly", update("jdx/hk", "github-releases", "major"), monthlySchedule],
+  ["hk-config major schedule: monthly", update("hugoh/hk-config", "github-tags", "major"), monthlySchedule],
+  ["first-party updates schedule: early Wednesday", update("hugoh/some-tool", "github-tags", "minor"), weeklyDebouncedSchedule],
   ["cargo major schedule: monthly fallthrough", update("tokio", "crate", "major", "cargo", "tokio", "Cargo.toml"), undefined],
-  ["linter schedule: weekend", update("typos", "github-releases", "patch", "mise", "typos"), weekend],
-  ["npm:renovate schedule: early Wednesday", update("renovate", "npm", "patch", "mise", "npm:renovate"), saturdayEarly],
-  // Biome is tooling like the rest: weekend for every update type, pin and
+  ["linter schedule: weekly", update("typos", "github-releases", "patch", "mise", "typos"), weeklySchedule],
+  ["npm:renovate schedule: early Wednesday", update("renovate", "npm", "patch", "mise", "npm:renovate"), weeklyDebouncedSchedule],
+  // Biome is tooling like the rest: weekly for every update type, pin and
   // $schema alike.
-  ["biome mise pin schedule: weekend", update("@biomejs/biome", "npm", "patch", "mise", "biome", "mise.toml"), weekend],
-  ["biome mise pin minor schedule: weekend", update("@biomejs/biome", "npm", "minor", "mise", "biome", "mise.toml"), weekend],
-  ["jdx/hk schedule: weekend", update("jdx/hk", "github-releases", "minor"), weekend],
-  ["hk-config patch schedule: weekend", update("hugoh/hk-config", "github-tags", "patch"), weekend],
-  ["hk-config minor schedule: weekend", update("hugoh/hk-config", "github-tags", "minor"), weekend],
-  ["biome schema schedule: weekend", update("@biomejs/biome", "npm", "minor", "custom.jsonata", "@biomejs/biome", "biome.json"), weekend],
+  ["biome mise pin schedule: weekly", update("@biomejs/biome", "npm", "patch", "mise", "biome", "mise.toml"), weeklySchedule],
+  ["biome mise pin minor schedule: weekly", update("@biomejs/biome", "npm", "minor", "mise", "biome", "mise.toml"), weeklySchedule],
+  ["jdx/hk schedule: weekly", update("jdx/hk", "github-releases", "minor"), weeklySchedule],
+  ["hk-config patch schedule: weekly", update("hugoh/hk-config", "github-tags", "patch"), weeklySchedule],
+  ["hk-config minor schedule: weekly", update("hugoh/hk-config", "github-tags", "minor"), weeklySchedule],
+  ["biome schema schedule: weekly", update("@biomejs/biome", "npm", "minor", "custom.jsonata", "@biomejs/biome", "biome.json"), weeklySchedule],
   // Biome is tooling like the rest. The group only pairs the pin and the
   // $schema, so they share one window.
-  ["biome major schedule: monthly", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), monthlyWeekend],
-  ["biome schema major schedule: monthly", update("@biomejs/biome", "npm", "major", "custom.jsonata", "@biomejs/biome", "biome.json"), monthlyWeekend],
+  ["biome major schedule: monthly", update("@biomejs/biome", "npm", "major", "mise", "biome", "mise.toml"), monthlySchedule],
+  ["biome schema major schedule: monthly", update("@biomejs/biome", "npm", "major", "custom.jsonata", "@biomejs/biome", "biome.json"), monthlySchedule],
 ];
 for (const [name, input, expected] of scheduleCases) {
   const out = await applyPackageRules(input);
@@ -461,25 +461,25 @@ for (const [name, actual] of [
   ["base schedule", base.schedule],
   ["lock file maintenance schedule", base.lockFileMaintenance?.schedule],
 ]) {
-  const ok = JSON.stringify(actual) === JSON.stringify(monthlyWeekend);
+  const ok = JSON.stringify(actual) === JSON.stringify(monthlySchedule);
   if (!ok) failed = true;
   console.log(
-    `${ok ? "ok  " : "FAIL"} ${name}: monthly-weekend (got ${JSON.stringify(actual)})`,
+    `${ok ? "ok  " : "FAIL"} ${name}: monthly (got ${JSON.stringify(actual)})`,
   );
 }
-// Package rules cannot extend presets/monthly-weekend (it holds
+// Package rules cannot extend presets/monthly (it holds
 // lockFileMaintenance), so its schedule is inlined; keep the copy honest.
 {
-  const ok = JSON.stringify(monthlyWeekend) === JSON.stringify(monthlyWindowStrict);
+  const ok = JSON.stringify(monthlySchedule) === JSON.stringify(monthlyWindowStrict);
   if (!ok) failed = true;
-  console.log(`${ok ? "ok  " : "FAIL"} monthly-weekend schedule matches the inlined copy`);
+  console.log(`${ok ? "ok  " : "FAIL"} monthly schedule matches the inlined copy`);
 }
-// The weekly windows are pinned too: the weekend must close by Saturday 5am,
+// The schedules are pinned too: the weekly window must close by Saturday 5am,
 // and the short window for fast-releasing packages sits on Wednesday so it
-// overlaps neither the weekend nor the monthly window.
+// overlaps neither the weekly nor the monthly window.
 for (const [name, actual, expected] of [
-  ["weekend", weekend, weekendStrict],
-  ["saturday-early", saturdayEarly, wednesdayEarlyStrict],
+  ["weekly", weeklySchedule, weeklyStrict],
+  ["weekly-debounced", weeklyDebouncedSchedule, weeklyDebouncedStrict],
 ]) {
   const ok = JSON.stringify(actual) === JSON.stringify(expected);
   if (!ok) failed = true;
@@ -490,8 +490,8 @@ for (const [name, actual, expected] of [
 const presetOf = (name) =>
   resolveExtends({ extends: [`local>hugoh/renovate-config//presets/${name}`] });
 for (const [stable, alias, schedule] of [
-  ["weekly", "weekend", weekendStrict],
-  ["weekly-debounced", "saturday-early", wednesdayEarlyStrict],
+  ["weekly", "weekend", weeklyStrict],
+  ["weekly-debounced", "saturday-early", weeklyDebouncedStrict],
   ["monthly", "monthly-weekend", monthlyWindowStrict],
 ]) {
   const actual = presetOf(stable);
