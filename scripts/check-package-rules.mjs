@@ -386,7 +386,9 @@ const monthlyWeekend = resolveExtends({
 const saturdayEarly = resolveExtends({
   extends: ["local>hugoh/renovate-config//presets/saturday-early"],
 }).schedule;
-const monthlyWindowStrict = ["* 17-23 1-7 * 4", "* 0-16 2-8 * 5"];
+const monthlyWindowStrict = ["* 17-23 1-7 * 3", "* 0-16 2-8 * 4"];
+const weekendStrict = ["* 17-23 * * 4", "* * * * 5", "* 0-4 * * 6"];
+const wednesdayEarlyStrict = ["* 0-4 * * 3"];
 const scheduleCases = [
   ["minor schedule: weekend", update("example/other", "github-releases", "minor"), weekend],
   ["patch schedule: weekend", update("example/other", "github-releases", "patch"), weekend],
@@ -397,10 +399,10 @@ const scheduleCases = [
   ["tool major schedule: monthly (actions)", update("actions/checkout", "github-tags", "major", "github-actions"), monthlyWeekend],
   ["hk major schedule: monthly", update("jdx/hk", "github-releases", "major"), monthlyWeekend],
   ["hk-config major schedule: monthly", update("hugoh/hk-config", "github-tags", "major"), monthlyWeekend],
-  ["first-party updates schedule: early Saturday", update("hugoh/some-tool", "github-tags", "minor"), saturdayEarly],
+  ["first-party updates schedule: early Wednesday", update("hugoh/some-tool", "github-tags", "minor"), saturdayEarly],
   ["cargo major schedule: monthly fallthrough", update("tokio", "crate", "major", "cargo", "tokio", "Cargo.toml"), undefined],
   ["linter schedule: weekend", update("typos", "github-releases", "patch", "mise", "typos"), weekend],
-  ["npm:renovate schedule: early Saturday", update("renovate", "npm", "patch", "mise", "npm:renovate"), saturdayEarly],
+  ["npm:renovate schedule: early Wednesday", update("renovate", "npm", "patch", "mise", "npm:renovate"), saturdayEarly],
   // Biome is tooling like the rest: weekend for every update type, pin and
   // $schema alike.
   ["biome mise pin schedule: weekend", update("@biomejs/biome", "npm", "patch", "mise", "biome", "mise.toml"), weekend],
@@ -471,6 +473,35 @@ for (const [name, actual] of [
   const ok = JSON.stringify(monthlyWeekend) === JSON.stringify(monthlyWindowStrict);
   if (!ok) failed = true;
   console.log(`${ok ? "ok  " : "FAIL"} monthly-weekend schedule matches the inlined copy`);
+}
+// The weekly windows are pinned too: the weekend must close by Saturday 5am,
+// and the short window for fast-releasing packages sits on Wednesday so it
+// overlaps neither the weekend nor the monthly window.
+for (const [name, actual, expected] of [
+  ["weekend", weekend, weekendStrict],
+  ["saturday-early", saturdayEarly, wednesdayEarlyStrict],
+]) {
+  const ok = JSON.stringify(actual) === JSON.stringify(expected);
+  if (!ok) failed = true;
+  console.log(`${ok ? "ok  " : "FAIL"} ${name} schedule: ${JSON.stringify(actual)}`);
+}
+// presets/weekend, saturday-early and monthly-weekend are aliases kept for
+// consumers that still extend them; the stable names hold the schedules.
+const presetOf = (name) =>
+  resolveExtends({ extends: [`local>hugoh/renovate-config//presets/${name}`] });
+for (const [stable, alias, schedule] of [
+  ["weekly", "weekend", weekendStrict],
+  ["weekly-debounced", "saturday-early", wednesdayEarlyStrict],
+  ["monthly", "monthly-weekend", monthlyWindowStrict],
+]) {
+  const actual = presetOf(stable);
+  const ok =
+    JSON.stringify(actual.schedule) === JSON.stringify(schedule) &&
+    JSON.stringify(actual) === JSON.stringify(presetOf(alias));
+  if (!ok) failed = true;
+  console.log(
+    `${ok ? "ok  " : "FAIL"} presets/${stable} holds the schedule and presets/${alias} resolves to it`,
+  );
 }
 // The first-party core rule only applies where a repo owns the package it
 // consumes, so matchPackageNames and matchRepositories must list the same

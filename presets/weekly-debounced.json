@@ -1,0 +1,5 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Wednesday before 5am (in the consuming config's timezone): a single short window every week, for dependencies that release several times a day and would otherwise open a PR for each run inside the wider weekly window. It overlaps neither the weekly window (opens Thursday 5pm) nor the monthly one (opens Wednesday 5pm, first week only).",
+  "schedule": ["* 0-4 * * 3"]
+}

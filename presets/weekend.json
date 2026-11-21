@@ -1,5 +1,5 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Weekend window: Friday 5pm to Sunday 5am (in the consuming config's timezone). Updates land at the start of the weekend, leaving time to fix anything that breaks.",
-  "schedule": ["* 17-23 * * 5", "* * * * 6", "* 0-4 * * 0"]
+  "description": "Deprecated alias of presets/weekly, kept so consumers that still extend presets/weekend keep working. Extend presets/weekly instead.",
+  "extends": ["local>hugoh/renovate-config//presets/weekly"]
 }

@@ -68,9 +68,9 @@ flowchart TD
 | Window | What |
 |---|---|
 | Any time | Vulnerability fixes (6-hour soak), `first-party core` in the repos that own it (12 hours), Go patch toolchain bumps in binary repos (1 day) |
-| Saturday before 5am | `renovate CLI`, `first-party updates` |
-| Weekend (Fri 5pm–Sun 5am) | `dependency updates`, `hk`; in the Go hub, everything but majors, including the go-tools template update |
-| First Thursday 5pm–Friday 5pm of the month | Majors (tooling ones automerge once CI is green: GitHub Actions, mise, Copier, pre-commit, the hk pins), lock file maintenance; go-tools' `dev tools` / `template dev tools` |
+| Wednesday before 5am | `renovate CLI`, `first-party updates` |
+| Weekend (Thu 5pm–Sat 5am) | `dependency updates`, `hk`; in the Go hub, everything but majors, including the go-tools template update |
+| First Wednesday 5pm–Thursday 5pm of the month | Majors (tooling ones automerge once CI is green: GitHub Actions, mise, Copier, pre-commit, the hk pins), lock file maintenance; go-tools' `dev tools` / `template dev tools` |
 | Repo-specific | chezmoi runs `hugoh/**` (except hk-config) daily and lock files weekly; go-tools keeps `golangci-lint` weekly |
 
 Soaks: 7 days for third parties (`presets/base`), 1 day for `hugoh/**`
@@ -127,8 +127,8 @@ rules explain most of the rule-order constraints below:
    update turns the whole weekly PR red, patches and digests included, until
    it is fixed.
 4. **First-party**: minor, patch, pin and digest updates of `hugoh/**` get
-   their own group (`first-party updates`, Saturday before 5am: a release of
-   `gh-workflows` every couple of days matures mid-weekend after a 1-day soak,
+   their own group (`first-party updates`, Wednesday before 5am: a release of
+   `gh-workflows` every couple of days matures during the week after a 1-day soak,
    and a wide window opened one PR per release per repo) so a consumer can give
    them a different schedule; the core packages (reusable workflows, composite
    actions, shared tooling) propagate within a day and automerge (`first-party
@@ -166,7 +166,7 @@ maintenance; its **majors** wait for me. Digests (`:automergeDigest`),
 `first-party core` and everything else that sets `automerge` itself are
 unchanged.
 
-Tooling majors take the monthly window (Thursday before the first weekend),
+Tooling majors take the monthly window (Wednesday before the first weekend),
 which ends where the weekly window opens: a merged major invalidates the minors
 and patches of the old line, so the weekly group is built on the new baseline.
 The schedule is inlined in the rules (the monthly preset also holds
@@ -176,7 +176,7 @@ less. The soak stays at 7 days (longer buys little: compromises and bad
 releases surface within days, and CI is the real gate). The renovate CLI keeps
 its own window; biome is on the monthly window too. The Go hub's catch-all
 major rule skips these managers so they keep that window. Majors of shipped
-code share it, but I merge them by hand, so merge them before Friday 5pm for
+code share it, but I merge them by hand, so merge them before Thursday 5pm for
 the weekly group to benefit.
 
 The preset sets no groups, so it can sit in `presets/base` (before the hubs'
@@ -200,10 +200,21 @@ Things to know:
 - Branch protection needs a required check (an aggregate "ci" job), or
   platform automerge merges before CI has run.
 
+### Renamed presets
+
+The presets are named for their role, not their days, so shifting a window
+edits one file and no names. `presets/weekend`, `presets/saturday-early` and
+`presets/monthly-weekend` remain as deprecated aliases of `presets/weekly`,
+`presets/weekly-debounced` and `presets/monthly`, so consumers keep working
+while they migrate; `scripts/check-package-rules.mjs` checks the aliases
+resolve to the same config. The sections below still use the old names until
+the rest of this repo and its consumers move over.
+
 ### `presets/weekend`
 
-A `schedule` for Friday 5pm to Sunday 5am: updates land at the start of
-the weekend, leaving time to fix anything that breaks. The base config
+A `schedule` for Thursday 5pm to Saturday 5am: updates land at the start of
+the window, which closes by Saturday morning, leaving Friday to fix anything
+that breaks. The base config
 uses it for the weekly `dependency updates` group. Extend it at the
 top level or inside a `packageRules` entry:
 
@@ -221,21 +232,22 @@ extends this preset directly and layers a `lua` version ceiling on top.
 ### `presets/monthly-weekend`
 
 Replaces `schedule:monthly` and `:maintainLockFilesMonthly`: updates and lock
-file maintenance run from Thursday 5pm to Friday 5pm in the first week of the
+file maintenance run from Wednesday 5pm to Thursday 5pm in the first week of the
 month, instead of 00:00–03:59 on the 1st. The window ends where the weekly one
 opens, so majors and lock files land before that weekend's weekly group (which
 is then built on the new baseline) and the two loads don't compete for
-`prHourlyLimit`. Thursday counts on days 1–7 and Friday on days 2–8, so each
+`prHourlyLimit`. Wednesday counts on days 1–7 and Thursday on days 2–8, so each
 month has exactly one window. The base config uses it, so every hub's major
 updates and lock file maintenance share it; go-tools' `go-renovaterc` uses it
 for its own majors and monthly dev tool groups.
 
 ### `presets/saturday-early`
 
-Saturday before 5am: one short window a week, for the renovate CLI, which ships
+Wednesday before 5am: one short window a week, for the renovate CLI, which ships
 daily, and for `first-party updates` (`gh-workflows` ships every couple of
 days); either would otherwise open one PR per release inside the 36-hour
-weekend window.
+weekend window. It sits on Wednesday so it overlaps neither the weekend window
+nor the monthly one.
 
 ### The always-on fragments
 
@@ -325,7 +337,7 @@ to read the `jdx/hk` and `hugoh/hk-config` pins: custom managers for `.pkl`
 and `mise.toml`, and disabling the built-in `mise` manager for `hk`. They are
 moved in one go: `jdx/hk` and `hugoh/hk-config` both join the `hk` group
 on the weekend window (set on the rule itself, so hk-config doesn't inherit the
-Saturday-early window of `first-party updates`), with the 7-day soak
+Wednesday-early window of `first-party updates`), with the 7-day soak
 (hk-config's own 1-day soak would let it mature before the hk it needs), since
 a release of either can fail CI and hk-config needs a minimum hk
 (`min_hk_version`; see hk-config's README).
