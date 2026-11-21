@@ -9,7 +9,7 @@
     ":automergeMinor",
     ":automergeDigest",
     "github>hugoh/hk-config//presets/hk-pins",
-    "local>hugoh/renovate-config//presets/monthly-weekend",
+    "local>hugoh/renovate-config//presets/monthly",
     "local>hugoh/renovate-config//presets/automerge",
     "local>hugoh/renovate-config//presets/vulnerability-alerts"
   ],
