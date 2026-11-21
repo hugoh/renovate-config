@@ -1,9 +1,5 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Monthly window: Thursday 5pm to Friday 5pm in the first week of the month (in the consuming config's timezone), ending where the weekend window opens. Majors and lock file maintenance land before that weekend's weekly group, so the group is built on the new baseline and the two loads do not compete for the rate limit. The Friday part only counts on days 2-8 so each month gets exactly one Thursday-to-Friday window; lock file maintenance uses the same window.",
-  "schedule": ["* 17-23 1-7 * 4", "* 0-16 2-8 * 5"],
-  "lockFileMaintenance": {
-    "enabled": true,
-    "schedule": ["* 17-23 1-7 * 4", "* 0-16 2-8 * 5"]
-  }
+  "description": "Deprecated alias of presets/monthly, kept so consumers that still extend presets/monthly-weekend keep working. Extend presets/monthly instead.",
+  "extends": ["local>hugoh/renovate-config//presets/monthly"]
 }

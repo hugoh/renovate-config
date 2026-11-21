@@ -18,10 +18,10 @@
       "automerge": true
     },
     {
-      "description": "Tooling majors land in the monthly Thursday-to-Friday window, ahead of the weekly group: they automerge once CI is green, so there is no pile to triage, and a merged major invalidates the minor and patch updates of the old line before the weekly group is built. Same 7-day soak. The renovate CLI keeps its own window, set by default.json's later rule. The schedule is inlined because presets/monthly-weekend also sets lockFileMaintenance, which a package rule cannot hold; scripts/check-package-rules.mjs checks the copies match.",
+      "description": "Tooling majors land in the monthly Wednesday-to-Thursday window, ahead of the weekly group: they automerge once CI is green, so there is no pile to triage, and a merged major invalidates the minor and patch updates of the old line before the weekly group is built. Same 7-day soak. The renovate CLI keeps its own window, set by default.json's later rule. The schedule is inlined because presets/monthly-weekend also sets lockFileMaintenance, which a package rule cannot hold; scripts/check-package-rules.mjs checks the copies match.",
       "matchManagers": ["github-actions", "mise", "copier", "pre-commit"],
       "matchUpdateTypes": ["major"],
-      "schedule": ["* 17-23 1-7 * 4", "* 0-16 2-8 * 5"]
+      "schedule": ["* 17-23 1-7 * 3", "* 0-16 2-8 * 4"]
     },
     {
       "description": "Same for the pins that custom managers read: hk, hk-config and the biome $schema, so they share the monthly window with the mise pin.",
@@ -32,7 +32,7 @@
         "biomejs/biome"
       ],
       "matchUpdateTypes": ["major"],
-      "schedule": ["* 17-23 1-7 * 4", "* 0-16 2-8 * 5"]
+      "schedule": ["* 17-23 1-7 * 3", "* 0-16 2-8 * 4"]
     }
   ]
 }
