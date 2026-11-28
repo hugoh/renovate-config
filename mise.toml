@@ -1,7 +1,7 @@
 [tools]
 node = "26.13.1"
 "npm:renovate" = { version = "44.251.0", trust_policy_excludes = ["*"] }
-hk = { version = "2.13.0", workflow = "release.yml" }
+hk = { version = "2.14.0", workflow = "release.yml" }
 pkl = "0.33.1"
 jactionlint = { version = "2.6.0", workflow = "release.yaml" }
 pinact = "5.0.2"
